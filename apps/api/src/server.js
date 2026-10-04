@@ -307,10 +307,27 @@ app.patch('/api/admin/orders/:id', adminAuth, async (req, res) => {
   }
 });
 
+app.post('/api/admin/tables', adminAuth, async (req,res)=>{
+  if(!['owner','manager'].includes(req.admin.role))return res.status(403).json({error:'Only owners and managers can manage tables'});
+  try{
+    const body=z.object({label:z.string().min(1).max(50)}).parse(req.body);
+    const token='mudcups-table-'+Date.now().toString(36)+'-'+crypto.randomBytes(8).toString('hex');
+    const {data,error}=await supabase.from('restaurant_tables').insert({restaurant_id:req.admin.restaurant_id,label:body.label.trim(),public_token:token,active:true}).select('id,label,active,public_token').single();
+    if(error)throw error;res.status(201).json({table:data});
+  }catch(e){console.error(e);res.status(400).json({error:'Unable to create table'})}
+});
+app.patch('/api/admin/tables/:id', adminAuth, async (req,res)=>{
+  if(!['owner','manager'].includes(req.admin.role))return res.status(403).json({error:'Only owners and managers can manage tables'});
+  try{
+    const body=z.object({label:z.string().min(1).max(50).optional(),active:z.boolean().optional()}).parse(req.body);
+    const {data,error}=await supabase.from('restaurant_tables').update(body).eq('id',req.params.id).eq('restaurant_id',req.admin.restaurant_id).select('id,label,active,public_token').maybeSingle();
+    if(error)throw error;if(!data)return res.status(404).json({error:'Table not found'});res.json({table:data});
+  }catch(e){console.error(e);res.status(400).json({error:'Unable to update table'})}
+});
 app.get('/api/admin/tables', adminAuth, async (req, res) => {
   try {
     const [{ data: tables, error: tableError }, { data: sessions, error: sessionError }, { data: orders, error: orderError }, { data: requests, error: requestError }] = await Promise.all([
-      supabase.from('restaurant_tables').select('id,label,active').eq('restaurant_id', req.admin.restaurant_id).order('label'),
+      supabase.from('restaurant_tables').select('id,label,active,public_token').eq('restaurant_id', req.admin.restaurant_id).order('label'),
       supabase.from('customer_sessions').select('id,table_id,created_at,expires_at').eq('restaurant_id', req.admin.restaurant_id).gt('expires_at', new Date().toISOString()).order('created_at',{ascending:false}),
       supabase.from('orders').select('id,table_id,status,total,created_at,payment_status,payment_method,paid_at').eq('restaurant_id', req.admin.restaurant_id).not('status','in','(served,cancelled)').order('created_at',{ascending:false}),
       supabase.from('service_requests').select('table_id,type,status').eq('restaurant_id', req.admin.restaurant_id).in('status',['pending','acknowledged'])
@@ -329,7 +346,7 @@ app.get('/api/admin/tables', adminAuth, async (req, res) => {
       const session = latestSession.get(t.id);
       const order = latestOrder.get(t.id)||null;
       return {
-        id:t.id,label:t.label,active:t.active,
+        id:t.id,label:t.label,active:t.active,public_token:t.public_token,
         occupied:!!session,
         session_id:session?.id||null,
         session_started_at:session?.created_at||null,
