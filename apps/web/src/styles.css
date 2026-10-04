@@ -707,3 +707,35 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .joinCodeFooter>span{font-size:11px;color:rgba(255,255,255,.58)}
 .joinCodeCopy{border:0;border-radius:9px;padding:7px 10px;background:#e97825;color:#fff;font:700 11px inherit;cursor:pointer;box-shadow:0 5px 14px rgba(233,120,37,.22)}
 @media(max-width:480px){.joinCodeCard{padding:15px;margin-top:16px}.joinCodeHead small{max-width:145px}.joinCodeValue{min-height:64px}.joinCodeValue strong{font-size:32px}}
+
+/* Table payment + session controls */
+.tablePayButton,.kitchenPayButton{
+  border:1px solid rgba(233,120,37,.38);
+  background:rgba(233,120,37,.10);
+  color:#b85d18;
+  border-radius:12px;
+  padding:10px 13px;
+  font-weight:800;
+  cursor:pointer;
+}
+.tablePayButton:hover,.kitchenPayButton:hover{background:rgba(233,120,37,.17)}
+.kitchenTablesPanel{margin:0 18px 18px;padding:18px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(255,255,255,.035)}
+.kitchenTablesHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.kitchenTablesHead h2{margin:0;font-size:17px}
+.kitchenTablesHead span{display:block;margin-top:3px;font-size:12px;opacity:.62}
+.kitchenTablesHead button{border:1px solid rgba(255,255,255,.1);background:transparent;color:inherit;border-radius:10px;padding:8px 11px;cursor:pointer}
+.kitchenTablesGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.kitchenTableCard{border:1px solid rgba(255,255,255,.09);border-radius:15px;padding:14px;background:rgba(0,0,0,.12)}
+.kitchenTableCard.occupied{box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.kitchenTableTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.kitchenTableTop b{display:block;font-size:16px}.kitchenTableTop span{display:block;margin-top:4px;font-size:11px;opacity:.62}
+.kitchenTableTop>strong{font-size:10px;letter-spacing:.09em;color:#e97825}
+.kitchenTableBill{display:flex;justify-content:space-between;margin:13px 0;padding:10px 11px;border-radius:11px;background:rgba(255,255,255,.045);font-size:12px}
+.kitchenTableActions{display:flex;gap:8px;flex-wrap:wrap}
+.kitchenTableActions button{flex:1;min-width:125px}
+.kitchenCloseButton{border:1px solid rgba(210,70,50,.35);background:rgba(210,70,50,.08);color:#b83f31;border-radius:12px;padding:10px 13px;font-weight:800;cursor:pointer}
+.kitchenTableActions button:disabled{opacity:.55;cursor:not-allowed}
+@media(max-width:640px){
+  .kitchenTablesPanel{margin:0 10px 12px;padding:13px}
+  .kitchenTablesGrid{grid-template-columns:1fr}
+}
