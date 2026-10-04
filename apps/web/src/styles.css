@@ -355,3 +355,13 @@ header{
 .kitchenOfflineBanner span{flex:1;color:#a64b42}
 .kitchenOfflineBanner button{border:1px solid #d8aaa3;background:#fff;border-radius:8px;padding:6px 10px;color:#8f2e26;font-weight:800;font-size:10px}
 @media(max-width:600px){.kitchenOfflineBanner{padding:8px 10px;flex-wrap:wrap}.kitchenOfflineBanner span{flex-basis:100%;order:3}}
+
+.menuSearchTop{display:flex;align-items:center;gap:6px;height:34px;padding:0 7px 0 10px;border:1px solid #ded1c5;border-radius:10px;background:#fffaf5}
+.menuSearchTop input{width:150px;border:0;outline:0;background:transparent;font:inherit;font-size:11px;color:#2a241f}
+.menuSearchTop button{border:0;background:transparent;padding:3px;display:grid;place-items:center;color:#6e6259}
+.adminStats{display:grid;grid-template-columns:repeat(5,minmax(110px,1fr));gap:9px;margin:14px 0}
+.adminStats>div{background:#fff;border:1px solid #e5dbd0;border-radius:12px;padding:12px 13px;display:flex;flex-direction:column;gap:5px}
+.adminStats span{font-size:10px;color:#81766d}
+.adminStats b{font-size:18px;color:#2a241f}
+@media(max-width:800px){.adminStats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.menuSearchTop input{width:110px}.adminStats{grid-template-columns:1fr 1fr}}
