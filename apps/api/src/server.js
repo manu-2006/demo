@@ -153,11 +153,30 @@ app.get('/api/admin/restaurant', adminAuth, async (req,res)=>{
     if(error)throw error;if(!data)return res.status(404).json({error:'Restaurant not found'});res.json({restaurant:data});
   }catch(e){console.error(e);res.status(500).json({error:'Unable to load restaurant settings'})}
 });
+app.get('/api/admin/setup', adminAuth, async (req,res)=>{
+  try{
+    const {data,error}=await supabase.from('restaurants').select('id,name,slug,status,plan,onboarding_completed,logo_url,cover_image_url,phone,address,google_maps_url,instagram_url,facebook_url,default_language').eq('id',req.admin.restaurant_id).maybeSingle();
+    if(error)throw error;if(!data)return res.status(404).json({error:'Restaurant not found'});res.json({restaurant:data});
+  }catch(e){console.error(e);res.status(500).json({error:'Unable to load setup'})}
+});
+
 app.patch('/api/admin/restaurant', adminAuth, async (req,res)=>{
   if(req.admin.role!=='owner')return res.status(403).json({error:'Only the owner can change restaurant settings'});
   try{
-    const body=z.object({name:z.string().min(2).max(120)}).parse(req.body);
-    const {data,error}=await supabase.from('restaurants').update({name:body.name.trim()}).eq('id',req.admin.restaurant_id).select('id,name,slug,created_at').single();
+    const body=z.object({
+      name:z.string().min(2).max(120).optional(),
+      logo_url:z.string().url().max(1000).nullable().optional(),
+      cover_image_url:z.string().url().max(1000).nullable().optional(),
+      phone:z.string().max(30).nullable().optional(),
+      address:z.string().max(300).nullable().optional(),
+      google_maps_url:z.string().url().max(1000).nullable().optional(),
+      instagram_url:z.string().url().max(1000).nullable().optional(),
+      facebook_url:z.string().url().max(1000).nullable().optional(),
+      default_language:z.enum(['en','kn','bilingual']).optional(),
+      onboarding_completed:z.boolean().optional()
+    }).parse(req.body);
+    const update={...body};if(update.name)update.name=update.name.trim();
+    const {data,error}=await supabase.from('restaurants').update(update).eq('id',req.admin.restaurant_id).select('id,name,slug,status,plan,onboarding_completed,logo_url,cover_image_url,phone,address,google_maps_url,instagram_url,facebook_url,default_language').single();
     if(error)throw error;res.json({restaurant:data});
   }catch(e){console.error(e);res.status(400).json({error:'Unable to update restaurant settings'})}
 });
