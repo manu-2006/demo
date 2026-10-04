@@ -13,7 +13,6 @@ export default defineConfig({
           const dir = path.join(dist, route)
           fs.mkdirSync(dir, { recursive: true })
           fs.copyFileSync(index, path.join(dir, 'index.html'))
-          fs.copyFileSync(index, path.join(dist, route))
         }
       }
     }
