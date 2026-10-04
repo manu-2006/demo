@@ -448,3 +448,5 @@ header{
 .searchResultsHead button{border:0;background:#fff1e6;color:#d96517;font-weight:700;padding:8px 12px;border-radius:10px}
 .menuSearchEmpty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:34px 16px;text-align:center;background:#fff;border:1px solid #eadfce;border-radius:18px;color:#7a6a5e}
 .menuSearchEmpty b{color:#2b241f}
+
+.restaurantIdentity{display:flex;align-items:center;gap:9px;min-width:0}.restaurantLogo{width:34px;height:34px;border-radius:10px;object-fit:cover;border:1px solid #eadfce;background:#fff}.restaurantIdentity .brand{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px}.hero[style]{background-size:cover;background-position:center;color:#fff}.hero[style] h1,.hero[style] p,.hero[style]>span{color:#fff}.hero[style] p{opacity:.9}
