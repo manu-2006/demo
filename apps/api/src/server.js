@@ -29,7 +29,8 @@ if (!JWT_SECRET) console.warn('JWT_SECRET is not configured');
 const orderSchema = z.object({
   items: z.array(z.object({
     menu_item_id: z.string().uuid(),
-    quantity: z.number().int().min(1).max(20)
+    quantity: z.number().int().min(1).max(20),
+    size: z.enum(['small','large']).default('small')
   })).min(1).max(50)
 });
 
@@ -198,7 +199,7 @@ app.get('/api/admin/orders', adminAuth, async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('orders')
-      .select('id,status,total,created_at,restaurant_tables!inner(label),order_items(id,name_snapshot,quantity,price_snapshot)')
+      .select('id,status,total,created_at,restaurant_tables!inner(label),order_items(id,name_snapshot,quantity,price_snapshot,variant_snapshot)')
       .eq('restaurant_id', req.admin.restaurant_id)
       .neq('status', 'served')
       .order('created_at', { ascending: false });
@@ -206,7 +207,7 @@ app.get('/api/admin/orders', adminAuth, async (req, res) => {
     const orders = (data || []).map(o => ({
       id: o.id, status: o.status, total: o.total, created_at: o.created_at,
       table_label: o.restaurant_tables.label,
-      items: (o.order_items || []).map(i => ({ name: i.name_snapshot, quantity: i.quantity, price: i.price_snapshot }))
+      items: (o.order_items || []).map(i => ({ name: i.name_snapshot, quantity: i.quantity, price: i.price_snapshot, variant: i.variant_snapshot }))
     }));
     res.json({ restaurant_name: req.admin.restaurant_name, role: req.admin.role, orders });
   } catch (e) {
@@ -238,7 +239,7 @@ app.post('/api/orders', async (req, res) => {
     const session = await customerSession(req);
     if (!session) return res.status(401).json({ error: 'Table session expired' });
     const body = orderSchema.parse(req.body);
-    const rpcItems = body.items.map(i => ({ menu_item_id: i.menu_item_id, qty: i.quantity }));
+    const rpcItems = body.items.map(i => ({ menu_item_id: i.menu_item_id, qty: i.quantity, size: i.size }));
     const { data, error } = await supabase.rpc('place_order', {
       p_restaurant_id: session.restaurant_id,
       p_table_id: session.table_id,
