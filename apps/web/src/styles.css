@@ -410,3 +410,10 @@ header{
 .adminLoadingCard{margin:30px auto;width:min(500px,calc(100% - 30px))}
 @media(max-width:900px){.adminStats{grid-template-columns:repeat(3,1fr)}.tableAdminGrid{grid-template-columns:repeat(2,1fr)}.adminMenuFormGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:600px){.adminMain{width:min(100% - 20px,560px);padding-top:18px}.adminTitle h1{font-size:23px}.adminStats{grid-template-columns:1fr 1fr}.adminStats>div:last-child{grid-column:1/-1}.adminMenuFormGrid{grid-template-columns:1fr!important}.adminMenuItem{grid-template-columns:1fr auto!important}.adminMenuItem>strong{grid-column:2}.adminMenuItem>button{grid-row:2}.tableAdminGrid{grid-template-columns:1fr 1fr}.adminStaleAlert>div:first-child{align-items:flex-start;flex-direction:column}}
+
+.adminMenuToolbar{display:grid!important;grid-template-columns:1fr 190px;gap:8px}
+.adminMenuToolbar select{height:42px;border:1px solid #d9cec2;border-radius:9px;background:#fff;padding:0 11px;font:inherit;font-size:11px;color:#2a241f}
+.menuOrderButtons{display:flex!important;flex-direction:column!important;gap:3px!important}
+.menuOrderButtons button{width:28px;height:22px;padding:0!important;line-height:1;border-radius:6px!important}
+.menuOrderButtons button:disabled{opacity:.3;cursor:not-allowed}
+@media(max-width:600px){.adminMenuToolbar{grid-template-columns:1fr}.menuOrderButtons{flex-direction:row!important}.menuOrderButtons button{width:34px}}
