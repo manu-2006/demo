@@ -632,7 +632,7 @@ app.post('/api/webhooks/razorpay', async (req,res) => {
       const providerPaymentId=entity?.id;
       if(providerOrderId && providerPaymentId){
         const {data:payment,error}=await supabase.from('bill_payments')
-          .select('id,order_ids,amount,status')
+          .select('id,order_ids,amount,status,session_id,restaurant_id')
           .eq('provider_order_id',providerOrderId)
           .maybeSingle();
         if(error) throw error;
@@ -640,6 +640,8 @@ app.post('/api/webhooks/razorpay', async (req,res) => {
           const now=new Date().toISOString();
           await supabase.from('bill_payments').update({provider_payment_id:providerPaymentId,status:'paid',paid_at:now}).eq('id',payment.id);
           await supabase.from('orders').update({payment_status:'paid',payment_method:'upi',paid_at:now}).in('id',payment.order_ids).eq('payment_status','unpaid');
+          const {data:remaining}=await supabase.from('orders').select('id').eq('session_id',payment.session_id).eq('restaurant_id',payment.restaurant_id).neq('status','cancelled').eq('payment_status','unpaid');
+          if(!(remaining||[]).length) { await supabase.from('customer_sessions').update({expires_at:now}).eq('id',payment.session_id).eq('restaurant_id',payment.restaurant_id); await supabase.from('service_requests').update({status:'completed'}).eq('session_id',payment.session_id).eq('restaurant_id',payment.restaurant_id).in('status',['pending','acknowledged']); }
         }
       }
     }
