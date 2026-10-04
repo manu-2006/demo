@@ -414,35 +414,84 @@ app.get('/api/admin/tables', adminAuth, async (req, res) => {
 app.post('/api/admin/tables/:id/close-session', adminAuth, async (req,res) => {
   try {
     const now = new Date().toISOString();
-    const { data: session, error: sessionError } = await supabase
+    const ref = req.params.id;
+
+    // The dashboard may send either the physical table id or the active
+    // customer session id. Resolve both forms safely within this restaurant.
+    let session = null;
+    let sessionError = null;
+
+    const bySession = await supabase
       .from('customer_sessions')
-      .select('id')
-      .eq('id',req.params.id)
-      .eq('restaurant_id',req.admin.restaurant_id)
+      .select('id,table_id,expires_at')
+      .eq('id', ref)
+      .eq('restaurant_id', req.admin.restaurant_id)
+      .gt('expires_at', now)
       .maybeSingle();
+
+    if (bySession.error) {
+      sessionError = bySession.error;
+    } else if (bySession.data) {
+      session = bySession.data;
+    } else {
+      const byTable = await supabase
+        .from('customer_sessions')
+        .select('id,table_id,expires_at')
+        .eq('table_id', ref)
+        .eq('restaurant_id', req.admin.restaurant_id)
+        .gt('expires_at', now)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      sessionError = byTable.error;
+      session = byTable.data || null;
+    }
+
     if (sessionError) throw sessionError;
-    if (!session) return res.status(404).json({error:'Table session not found'});
+    if (!session) return res.status(404).json({error:'No active customer session for this table'});
+
     const { data: unpaidOrders, error: unpaidError } = await supabase
-      .from('orders').select('id').eq('session_id',session.id).neq('status','cancelled').eq('payment_status','unpaid');
-    if(unpaidError) throw unpaidError;
-    if(unpaidOrders?.length) return res.status(409).json({error:'Please settle all orders before closing the table'});
-    
-    const { error: closeError } = await supabase
+      .from('orders')
+      .select('id,total,status')
+      .eq('session_id', session.id)
+      .neq('status', 'cancelled')
+      .eq('payment_status', 'unpaid');
+
+    if (unpaidError) throw unpaidError;
+
+    if (unpaidOrders?.length) {
+      return res.status(409).json({
+        error:'Please settle all orders before closing the table',
+        code:'UNPAID_ORDERS',
+        unpaid_count:unpaidOrders.length,
+        unpaid_total:unpaidOrders.reduce((sum,o)=>sum+Number(o.total||0),0)
+      });
+    }
+
+    const { data: closedSession, error: closeError } = await supabase
       .from('customer_sessions')
       .update({expires_at:now})
       .eq('id',session.id)
-      .eq('restaurant_id',req.admin.restaurant_id);
+      .eq('restaurant_id',req.admin.restaurant_id)
+      .select('id,table_id,expires_at')
+      .maybeSingle();
+
     if (closeError) throw closeError;
-    await supabase
+    if (!closedSession) return res.status(404).json({error:'Session was already closed'});
+
+    const { error: requestError } = await supabase
       .from('service_requests')
       .update({status:'completed'})
       .eq('session_id',session.id)
       .eq('restaurant_id',req.admin.restaurant_id)
       .in('status',['pending','acknowledged']);
-    res.json({ok:true});
+
+    if (requestError) throw requestError;
+
+    res.json({ok:true,table_id:session.table_id,session_id:session.id,table_closed:true});
   } catch(e) {
     console.error(e);
-    res.status(400).json({error:'Could not close table session'});
+    res.status(400).json({error:e?.message||'Could not close table session'});
   }
 });
 
