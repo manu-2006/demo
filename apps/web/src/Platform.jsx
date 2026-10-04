@@ -49,9 +49,9 @@ export default function Platform(){
     catch(e){setError(e.message)}finally{setActionBusy('')}
   }
   async function logout(){await api('/api/platform/logout',{method:'POST'}).catch(()=>{});setMe(null)}
-  if(loading&&!me)return <div className="platformPage platformBoot"><div className="premiumLoader"><div className="loaderMark">M</div><div className="loaderRing"/><b>MENUTABLE</b><span>Preparing your workspace…</span></div></div>;
+  if(loading&&!me)return <div className="platformPage platformBoot"><div className="premiumLoader"><div className="loaderMark"><img src="/zelvon-mark.svg" alt="Zelvon"/></div><div className="loaderRing"/><b>ZELVON</b><span>Preparing your workspace…</span></div></div>;
   if(!me)return <div className="platformPage platformLoginPage"><form className="platformLogin platformCard" onSubmit={doLogin}>
-    <div className="platformBrand">MENUTABLE</div><span className="loginEyebrow">PLATFORM CONTROL CENTER</span><h1>Welcome back</h1><p>Manage restaurants, plans and access from one secure workspace.</p>
+    <div className="platformBrand">ZELVON</div><span className="loginEyebrow">PLATFORM CONTROL CENTER</span><h1>Welcome back</h1><p>Manage restaurants, plans and access from one secure workspace.</p>
     {error&&<div className="platformError">{error}</div>}
     <label>Email<input placeholder="Platform admin email" type="email" value={login.email} onChange={e=>setLogin({...login,email:e.target.value})} required/></label>
     <label>Password<input placeholder="Password" type="password" value={login.password} onChange={e=>setLogin({...login,password:e.target.value})} required/></label>
@@ -59,7 +59,7 @@ export default function Platform(){
   </form></div>;
   const active=restaurants.filter(r=>r.status==='active').length,trial=restaurants.filter(r=>r.status==='trial').length,suspended=restaurants.filter(r=>r.status==='suspended').length;
   return <div className="platformPage">
-    <header className="platformHeader"><div className="platformHeaderBrand"><b>MENUTABLE</b><span>Platform Control Center</span></div><div className="platformHeaderRight"><span className="platformLiveDot">● Live</span><button onClick={logout}>Logout</button></div></header>
+    <header className="platformHeader"><div className="platformHeaderBrand"><b>ZELVON</b><span>Platform Control Center</span></div><div className="platformHeaderRight"><span className="platformLiveDot">● Live</span><button onClick={logout}>Logout</button></div></header>
     <main className="platformMain">
       <div className="platformHero"><div><span>SAAS OPERATIONS</span><h1>Restaurants</h1><p>One platform. Isolated data. Centralized control.</p></div><div className="platformHeroBadge"><b>{active}</b><span>active tenants</span></div></div>
       {error&&<div className="platformError">{error}</div>}{notice&&<div className="platformSuccess">{notice}</div>}
