@@ -423,3 +423,7 @@ header{
 .tableAdminCard.inactive{opacity:.68}.tableAdminCard.inactive .tableAdminTop strong{color:#8a7e74}
 .tableAdminActions{display:flex;gap:6px;margin-top:8px}.tableAdminActions button{flex:1;border:1px solid #d9cec2;background:#fff;border-radius:8px;padding:7px 6px;font-size:9px;font-weight:700}.tableAdminActions button:last-child{color:#a74e12}
 @media(max-width:600px){.tableCreateForm{flex-direction:column}.tableCreateForm .placeOrder{width:100%!important}.tableAdminActions{flex-direction:column}}
+
+.adminTitleActions{display:flex;align-items:center;gap:8px}
+.adminMenuEditButton{background:#e97825!important;color:#fff!important;border-color:#e97825!important;min-width:100px}
+@media(max-width:600px){.adminTitleActions{width:100%;justify-content:flex-end}.adminTitleActions button{padding:8px 10px}.adminTitle{align-items:flex-start;flex-direction:column}}
