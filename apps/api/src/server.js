@@ -161,6 +161,16 @@ async function adminAuth(req, res, next) {
   }
 }
 
+app.get('/api/admin/staff', adminAuth, async (req,res)=>{
+  try{
+    const {data,error}=await supabase.from('restaurant_members')
+      .select('user_id,role,users!inner(id,email)')
+      .eq('restaurant_id',req.admin.restaurant_id)
+      .order('role').order('user_id');
+    if(error)throw error;
+    res.json({staff:(data||[]).map(m=>({user_id:m.user_id,email:m.users.email,role:m.role,is_current:m.user_id===req.admin.user_id}))});
+  }catch(e){console.error(e);res.status(500).json({error:'Unable to load staff'})}
+});
 app.get('/api/admin/menu', adminAuth, async (req,res)=>{
   try{
     const {data,error}=await supabase.from('menu_items').select('id,name_en,name_kn,description_en,description_kn,price,price_large,image_url,category,is_available,sort_order').eq('restaurant_id',req.admin.restaurant_id).order('category').order('sort_order');
