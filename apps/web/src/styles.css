@@ -323,3 +323,9 @@ header{
 .kitchenHistoryTools input{flex:1;min-width:0;height:40px;border:1px solid #ddd0c2;border-radius:9px;padding:0 11px;background:#fff;font:inherit;font-size:12px}
 .kitchenHistoryTools select{height:40px;border:1px solid #ddd0c2;border-radius:9px;padding:0 10px;background:#fff;font:inherit;font-size:11px}
 @media(max-width:600px){.kitchenHistoryTools{flex-direction:column}.kitchenHistoryTools input,.kitchenHistoryTools select{width:100%}}
+
+.kitchenConnection-online i{background:#39a96b!important}
+.kitchenConnection-offline i{background:#d9534f!important}
+.kitchenConnection-connecting i{background:#d9a441!important}
+.kitchenConnection-offline{color:#d9534f}
+.kitchenConnection-connecting{color:#d9a441}
