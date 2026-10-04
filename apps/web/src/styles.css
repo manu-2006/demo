@@ -48,3 +48,26 @@
   .modalBackdrop{padding:0}
   .modal{max-height:calc(100dvh - 18px)}
 }
+
+.adminSection{margin-top:28px}
+.adminSectionHead{display:flex;justify-content:space-between;align-items:end;margin-bottom:12px}
+.adminSectionHead h2{margin:0;font-size:20px}
+.adminSectionHead span{font-size:11px;color:#8b8177;font-weight:800}
+.serviceAdminGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.serviceAdminCard{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:15px;box-shadow:0 3px 12px #6d4b2812}
+.serviceAdminTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.serviceAdminTop>div{display:flex;flex-direction:column;gap:4px}
+.serviceAdminTop b{font-size:15px}
+.serviceAdminTop span{font-size:11px;color:#8a8177}
+.serviceAdminActions{display:flex;gap:7px;margin-top:13px}
+.serviceAdminActions button{flex:1;min-height:38px;border-radius:10px;font-size:11px;font-weight:900;border:1px solid var(--line);background:#fff}
+.serviceAdminActions button:disabled{opacity:.6}
+.serviceAck{color:#8a5b00;background:#fff8df!important}
+.serviceDone{color:#287443;background:#eff8f0!important}
+.serviceCancel{color:#9d3333;background:#fff2f2!important}
+.adminEmptySmall{padding:30px}
+@media(max-width:480px){
+ .adminSection{margin-top:22px}
+ .serviceAdminGrid{grid-template-columns:1fr}
+ .serviceAdminActions button{font-size:10px;padding:0 5px}
+}
