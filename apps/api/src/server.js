@@ -215,6 +215,7 @@ app.get('/api/admin/orders', adminAuth, async (req, res) => {
       .select('id,status,total,created_at,payment_status,payment_method,paid_at,restaurant_tables!inner(label),order_items(id,name_snapshot,quantity,price_snapshot,variant_snapshot)')
       .eq('restaurant_id', req.admin.restaurant_id)
       .neq('status', 'served')
+      .neq('status', 'cancelled')
       .order('created_at', { ascending: false });
     if (error) throw error;
     const orders = (data || []).map(o => ({
@@ -226,6 +227,30 @@ app.get('/api/admin/orders', adminAuth, async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Unable to load orders' });
+  }
+});
+
+app.get('/api/admin/kitchen/history', adminAuth, async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(Number(req.query.limit) || 100, 1), 200);
+    const { data, error } = await supabase
+      .from('orders')
+      .select('id,status,total,created_at,payment_status,payment_method,paid_at,restaurant_tables!inner(label),order_items(id,name_snapshot,quantity,price_snapshot,variant_snapshot)')
+      .eq('restaurant_id', req.admin.restaurant_id)
+      .in('status', ['served','cancelled'])
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    const orders = (data || []).map(o => ({
+      id:o.id,status:o.status,total:o.total,created_at:o.created_at,
+      payment_status:o.payment_status,payment_method:o.payment_method,paid_at:o.paid_at,
+      table_label:o.restaurant_tables.label,
+      items:(o.order_items||[]).map(i=>({name:i.name_snapshot,quantity:i.quantity,price:i.price_snapshot,variant:i.variant_snapshot}))
+    }));
+    res.json({restaurant_name:req.admin.restaurant_name,orders});
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({error:'Unable to load kitchen history'});
   }
 });
 
