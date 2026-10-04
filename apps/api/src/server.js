@@ -161,6 +161,20 @@ async function adminAuth(req, res, next) {
   }
 }
 
+app.get('/api/admin/restaurant', adminAuth, async (req,res)=>{
+  try{
+    const {data,error}=await supabase.from('restaurants').select('id,name,slug,created_at').eq('id',req.admin.restaurant_id).maybeSingle();
+    if(error)throw error;if(!data)return res.status(404).json({error:'Restaurant not found'});res.json({restaurant:data});
+  }catch(e){console.error(e);res.status(500).json({error:'Unable to load restaurant settings'})}
+});
+app.patch('/api/admin/restaurant', adminAuth, async (req,res)=>{
+  if(req.admin.role!=='owner')return res.status(403).json({error:'Only the owner can change restaurant settings'});
+  try{
+    const body=z.object({name:z.string().min(2).max(120)}).parse(req.body);
+    const {data,error}=await supabase.from('restaurants').update({name:body.name.trim()}).eq('id',req.admin.restaurant_id).select('id,name,slug,created_at').single();
+    if(error)throw error;res.json({restaurant:data});
+  }catch(e){console.error(e);res.status(400).json({error:'Unable to update restaurant settings'})}
+});
 app.get('/api/admin/staff', adminAuth, async (req,res)=>{
   try{
     const {data,error}=await supabase.from('restaurant_members')
