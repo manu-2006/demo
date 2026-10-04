@@ -234,6 +234,48 @@ app.patch('/api/admin/orders/:id', adminAuth, async (req, res) => {
   }
 });
 
+app.get('/api/admin/service-requests', adminAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('service_requests')
+      .select('id,type,status,created_at,restaurant_tables!inner(label)')
+      .eq('restaurant_id', req.admin.restaurant_id)
+      .in('status', ['pending','acknowledged'])
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    const requests = (data || []).map(r => ({
+      id: r.id, type: r.type, status: r.status, created_at: r.created_at,
+      table_label: r.restaurant_tables.label
+    }));
+    res.json({ requests });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Unable to load service requests' });
+  }
+});
+
+app.patch('/api/admin/service-requests/:id', adminAuth, async (req, res) => {
+  try {
+    const body = z.object({
+      status: z.enum(['pending','acknowledged','completed','cancelled'])
+    }).parse(req.body);
+    const { data, error } = await supabase
+      .from('service_requests')
+      .update({ status: body.status })
+      .eq('id', req.params.id)
+      .eq('restaurant_id', req.admin.restaurant_id)
+      .select('id,type,status,created_at')
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return res.status(404).json({ error: 'Service request not found' });
+    res.json(data);
+  } catch (e) {
+    console.error(e);
+    res.status(400).json({ error: 'Invalid service request update' });
+  }
+});
+
 app.get('/api/orders', async (req, res) => {
   try {
     const session = await customerSession(req);
