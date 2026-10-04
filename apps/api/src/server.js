@@ -161,6 +161,41 @@ async function adminAuth(req, res, next) {
   }
 }
 
+app.get('/api/admin/menu', adminAuth, async (req,res)=>{
+  try{
+    const {data,error}=await supabase.from('menu_items').select('id,name_en,name_kn,description_en,description_kn,price,price_large,image_url,category,is_available,sort_order').eq('restaurant_id',req.admin.restaurant_id).order('category').order('sort_order');
+    if(error)throw error;
+    res.json({items:data||[]});
+  }catch(e){console.error(e);res.status(500).json({error:'Unable to load menu'})}
+});
+function canManageMenu(req,res){
+  if(!['owner','manager'].includes(req.admin.role)){res.status(403).json({error:'Only owners and managers can manage the menu'});return false}
+  return true
+}
+app.post('/api/admin/menu', adminAuth, async (req,res)=>{
+  if(!canManageMenu(req,res))return;
+  try{
+    const body=z.object({name_en:z.string().min(1).max(150),name_kn:z.string().max(150).optional().default(''),description_en:z.string().max(500).optional().default(''),description_kn:z.string().max(500).optional().default(''),price:z.coerce.number().nonnegative(),price_large:z.union([z.coerce.number().nonnegative(),z.null()]).optional().default(null),image_url:z.string().url().max(1000).optional().or(z.literal('')).default(''),category:z.string().min(1).max(100),is_available:z.boolean().default(true),sort_order:z.coerce.number().int().default(0)}).parse(req.body);
+    const {data,error}=await supabase.from('menu_items').insert({...body,restaurant_id:req.admin.restaurant_id}).select('id,name_en,name_kn,description_en,description_kn,price,price_large,image_url,category,is_available,sort_order').single();
+    if(error)throw error; res.status(201).json({item:data});
+  }catch(e){console.error(e);res.status(400).json({error:'Unable to create menu item'})}
+});
+app.patch('/api/admin/menu/:id', adminAuth, async (req,res)=>{
+  if(!canManageMenu(req,res))return;
+  try{
+    const body=z.object({name_en:z.string().min(1).max(150).optional(),name_kn:z.string().max(150).optional(),description_en:z.string().max(500).optional(),description_kn:z.string().max(500).optional(),price:z.coerce.number().nonnegative().optional(),price_large:z.union([z.coerce.number().nonnegative(),z.null()]).optional(),image_url:z.string().url().max(1000).optional().or(z.literal('')),category:z.string().min(1).max(100).optional(),is_available:z.boolean().optional(),sort_order:z.coerce.number().int().optional()}).parse(req.body);
+    const {data,error}=await supabase.from('menu_items').update(body).eq('id',req.params.id).eq('restaurant_id',req.admin.restaurant_id).select('id,name_en,name_kn,description_en,description_kn,price,price_large,image_url,category,is_available,sort_order').maybeSingle();
+    if(error)throw error;if(!data)return res.status(404).json({error:'Menu item not found'});res.json({item:data});
+  }catch(e){console.error(e);res.status(400).json({error:'Unable to update menu item'})}
+});
+app.delete('/api/admin/menu/:id', adminAuth, async (req,res)=>{
+  if(!canManageMenu(req,res))return;
+  try{
+    const {error}=await supabase.from('menu_items').delete().eq('id',req.params.id).eq('restaurant_id',req.admin.restaurant_id);
+    if(error)throw error;res.json({ok:true});
+  }catch(e){console.error(e);res.status(400).json({error:'Unable to delete menu item'})}
+});
+
 app.post('/api/admin/login', async (req, res) => {
   try {
     const body = z.object({
