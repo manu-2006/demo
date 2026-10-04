@@ -180,8 +180,8 @@ app.post('/api/admin/login', async (req, res) => {
 
     const token = jwt.sign({ sub: user.id }, JWT_SECRET, { expiresIn: '12h' });
     res.cookie('admin_session', token, {
-      httpOnly: true, secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax', path: '/', maxAge: 12 * 60 * 60 * 1000
+      httpOnly: true, secure: true,
+      sameSite: 'none', path: '/', maxAge: 12 * 60 * 60 * 1000
     });
     res.json({ ok: true });
   } catch (e) {
@@ -191,7 +191,7 @@ app.post('/api/admin/login', async (req, res) => {
 });
 
 app.post('/api/admin/logout', (req, res) => {
-  res.clearCookie('admin_session', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' });
+  res.clearCookie('admin_session', { httpOnly: true, secure: true, sameSite: 'none', path: '/' });
   res.json({ ok: true });
 });
 
