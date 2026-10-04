@@ -579,3 +579,78 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .menuOrderButtons{display:flex;gap:5px}.menuOrderButtons button,.adminMenuItem>button{height:34px;padding:0 10px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.045);color:inherit;cursor:pointer;transition:.18s}.menuOrderButtons button:hover,.adminMenuItem>button:hover{transform:translateY(-1px);background:rgba(255,255,255,.09)}.menuOrderButtons button:disabled{opacity:.25;cursor:not-allowed;transform:none}.adminMenuItem .menuDelete{color:#ff9a9a;border-color:rgba(239,68,68,.16)}
 @media(max-width:900px){.adminMenuFormGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.adminMenuItem{grid-template-columns:minmax(0,1fr) auto auto}}
 @media(max-width:600px){.adminMenuForm{padding:16px;border-radius:18px}.adminMenuFormGrid{grid-template-columns:1fr}.adminMenuToolbar{grid-template-columns:1fr}.adminMenuItem{grid-template-columns:1fr;gap:8px}.menuOrderButtons{order:4}.adminMenuItem>button{width:100%}.menuAvailable,.menuUnavailable{width:max-content}}
+
+
+/* ===== MENU EDITOR MOBILE / PREMIUM FINAL PASS ===== */
+.adminSection:has(.adminMenuForm){
+  background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,250,243,.92));
+  border:1px solid #eadfd3;border-radius:24px;padding:18px;
+  box-shadow:0 14px 45px rgba(45,32,20,.08);overflow:hidden;
+}
+.adminSection:has(.adminMenuForm) .adminSectionHead{padding:2px 2px 4px}
+.adminSection:has(.adminMenuForm) .adminSectionHead h2{font-size:21px;letter-spacing:-.02em}
+.adminSection:has(.adminMenuForm) .adminSectionHead span{background:#fff0df;color:#a84d12;border:1px solid #f0d8bf;border-radius:999px;padding:6px 9px}
+.adminMenuForm{
+  background:linear-gradient(145deg,#fffdf9,#f8f1e8)!important;
+  border:1px solid #e6d9cb!important;box-shadow:0 12px 34px rgba(45,32,20,.08)!important;
+}
+.adminMenuForm::before{color:#a76a3e!important;opacity:.65!important}
+.adminMenuFormGrid input,.adminMenuToolbar input,.adminMenuToolbar select{
+  background:#fff!important;color:#2b241f!important;border-color:#ded2c5!important;
+  box-shadow:0 2px 8px rgba(45,32,20,.035);
+}
+.adminMenuFormGrid input::placeholder,.adminMenuToolbar input::placeholder{color:#a0968c}
+.adminMenuFormActions label{color:#665d54;opacity:1}
+.adminMenuList{gap:10px}
+.adminMenuItem{
+  background:#fff!important;border:1px solid #e7ddd3!important;
+  box-shadow:0 5px 18px rgba(45,32,20,.055)!important;
+  min-height:76px;padding:13px 14px!important;
+}
+.adminMenuItem:hover{background:#fff!important;border-color:#d9c7b6!important;box-shadow:0 12px 30px rgba(45,32,20,.10)!important}
+.adminMenuItem>div:first-child b{color:#29231f;font-size:14px}
+.adminMenuItem>div:first-child span{color:#8c7d70;opacity:1}
+.adminMenuItem>div:first-child small{color:#9a8e83;opacity:1}
+.menuAvailable,.menuUnavailable{font-weight:850}
+.menuOrderButtons button,.adminMenuItem>button{
+  background:#faf7f2!important;color:#4e443b!important;border-color:#ded2c6!important;
+  box-shadow:0 2px 7px rgba(45,32,20,.04);
+}
+.adminMenuItem .menuDelete{background:#fff7f6!important;color:#c45a55!important;border-color:#efd2d0!important}
+.adminMenuToolbar{margin-bottom:12px!important}
+.adminMenuToolbar input,.adminMenuToolbar select{height:44px!important}
+@media(max-width:600px){
+  .adminSection:has(.adminMenuForm){padding:13px;border-radius:20px}
+  .adminSection:has(.adminMenuForm) .adminSectionHead{margin-bottom:10px}
+  .adminSection:has(.adminMenuForm) .adminSectionHead h2{font-size:18px}
+  .adminMenuForm{padding:15px!important;border-radius:17px!important;margin-bottom:13px!important}
+  .adminMenuFormGrid{gap:9px!important}
+  .adminMenuFormGrid input{height:44px!important}
+  .adminMenuFormActions{gap:8px!important;margin-top:12px!important}
+  .adminMenuFormActions .placeOrder{flex:1;min-height:43px}
+  .adminMenuFormActions>button:not(.placeOrder){min-height:43px;padding:0 14px;border:1px solid #ded2c6;border-radius:10px;background:#fff;color:#4e443b}
+  .adminMenuToolbar{grid-template-columns:1fr!important;gap:8px!important}
+  .adminMenuToolbar input,.adminMenuToolbar select{height:43px!important}
+  .adminMenuList{gap:8px!important}
+  .adminMenuItem{
+    display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-rows:auto auto!important;align-items:center!important;
+    gap:8px 10px!important;min-height:0!important;padding:13px!important;
+  }
+  .adminMenuItem>div:first-child{grid-column:1;grid-row:1!important;min-width:0}
+  .adminMenuItem>strong{grid-column:2!important;grid-row:1!important;justify-self:end}
+  .adminMenuItem .menuOrderButtons{
+    grid-column:1!important;grid-row:2!important;justify-self:start;
+    display:flex!important;flex-direction:row!important;gap:5px!important;order:initial!important;
+  }
+  .adminMenuItem .menuOrderButtons button{width:36px!important;height:34px!important;border-radius:9px!important}
+  .adminMenuItem>button:not(.menuDelete){grid-column:2!important;grid-row:2!important;width:auto!important;min-width:58px;height:34px!important;padding:0 11px!important}
+  .adminMenuItem>.menuDelete{grid-column:2!important;grid-row:3!important;width:100%!important;height:34px!important}
+  .adminMenuItem:has(.menuDelete){grid-template-rows:auto auto auto!important}
+  .adminMenuItem>div:first-child small{font-size:10px!important}
+}
+@media(max-width:380px){
+  .adminMenuItem{grid-template-columns:minmax(0,1fr) 64px!important}
+  .menuAvailable,.menuUnavailable{font-size:9px!important;padding:5px 7px!important}
+  .adminMenuItem>button:not(.menuDelete){min-width:52px!important;font-size:11px}
+}
