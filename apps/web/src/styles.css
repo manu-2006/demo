@@ -318,3 +318,8 @@ header{
 .historyServed{background:#eaf7ee;color:#277344}
 .historyCancelled{background:#fff0ee;color:#b33a2f}
 @media(max-width:600px){.kitchenHeaderActions{gap:5px}.kitchenHeaderActions>button{padding:7px 8px;font-size:10px}.kitchenServiceBar{padding:8px 10px}.kitchenHistoryBackdrop{padding:10px}.kitchenHistoryCard{grid-template-columns:1fr auto}.kitchenHistoryCard>em{grid-column:2}.kitchenHistoryCard>div:last-child{grid-column:1/-1}}
+
+.kitchenHistoryTools{display:flex;gap:8px;margin:0 0 12px}
+.kitchenHistoryTools input{flex:1;min-width:0;height:40px;border:1px solid #ddd0c2;border-radius:9px;padding:0 11px;background:#fff;font:inherit;font-size:12px}
+.kitchenHistoryTools select{height:40px;border:1px solid #ddd0c2;border-radius:9px;padding:0 10px;background:#fff;font:inherit;font-size:11px}
+@media(max-width:600px){.kitchenHistoryTools{flex-direction:column}.kitchenHistoryTools input,.kitchenHistoryTools select{width:100%}}
