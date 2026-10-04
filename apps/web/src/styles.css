@@ -365,3 +365,17 @@ header{
 .adminStats b{font-size:18px;color:#2a241f}
 @media(max-width:800px){.adminStats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:480px){.menuSearchTop input{width:110px}.adminStats{grid-template-columns:1fr 1fr}}
+
+.adminMenuForm{padding:14px;background:#fffaf5;border:1px solid #e5dbd0;border-radius:14px}
+.adminMenuFormGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.adminMenuFormGrid input,.adminMenuToolbar input{height:38px;border:1px solid #ddd0c2;border-radius:9px;padding:0 10px;background:#fff;font:inherit;font-size:11px;min-width:0}
+.adminMenuFormActions{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+.adminMenuFormActions label{font-size:11px;display:flex;align-items:center;gap:5px;flex:1}
+.adminMenuFormActions button{border:1px solid #ddd0c2;background:#fff;border-radius:9px;padding:8px 11px;font-weight:700}
+.adminMenuFormActions .placeOrder{background:#2a241f;color:#fff;border-color:#2a241f}
+.adminMenuToolbar{margin:12px 0}.adminMenuToolbar input{width:100%}
+.adminMenuList{display:grid;gap:7px}.adminMenuItem{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:8px;padding:10px 12px;border:1px solid #e5dbd0;border-radius:11px;background:#fff}
+.adminMenuItem>div{display:flex;flex-direction:column;gap:2px}.adminMenuItem b{font-size:12px}.adminMenuItem span{font-size:10px;color:#81766d}.adminMenuItem small{font-size:10px;color:#9a8d83}
+.adminMenuItem button{border:1px solid #ddd0c2;background:#fff;border-radius:8px;padding:6px 9px;font-size:10px;font-weight:700}.adminMenuItem .menuDelete{color:#b33a2f;border-color:#ead0ca}.menuAvailable,.menuUnavailable{font-size:9px;padding:5px 7px;border-radius:7px}.menuAvailable{color:#277344;background:#eaf7ee}.menuUnavailable{color:#b33a2f;background:#fff0ee}
+@media(max-width:700px){.adminMenuFormGrid{grid-template-columns:1fr 1fr}.adminMenuItem{grid-template-columns:1fr auto}.adminMenuItem>button{grid-row:2}.adminMenuItem>strong{grid-column:2}}
+@media(max-width:480px){.adminMenuFormGrid{grid-template-columns:1fr}}
