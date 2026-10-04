@@ -673,3 +673,24 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .customerHeader .ordersButton:active{transform:translateY(1px) scale(.97);box-shadow:0 2px 8px rgba(0,0,0,.16)}
 .customerHeader .lang{height:42px;min-height:42px;min-width:52px;padding:0 13px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(145deg,#ed8129,#d76213);border-radius:13px;box-shadow:0 7px 18px rgba(233,120,37,.22);font-size:12px;letter-spacing:.02em}
 @media(max-width:390px){.customerHeader{padding-left:12px;padding-right:12px}.brandMark{width:38px;height:38px;flex-basis:38px;border-radius:12px}.restaurantName{font-size:13px;max-width:36vw}.platformBrand{font-size:8px}.customerHeader .ordersButton{padding:0 10px}.customerHeader .ordersButton span{display:none}.customerHeader .lang{min-width:46px;padding:0 10px}}
+
+/* Premium welcome / table access card */
+.hero{isolation:isolate;background:linear-gradient(135deg,#11140f 0%,#171914 52%,#242018 100%)!important;border:1px solid rgba(255,255,255,.07);box-shadow:0 18px 48px rgba(24,18,12,.20),inset 0 1px 0 rgba(255,255,255,.06);padding:25px 18px 18px;overflow:hidden}
+.hero:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 92% 18%,rgba(233,120,37,.28),transparent 28%),radial-gradient(circle at 4% 100%,rgba(233,120,37,.08),transparent 35%);pointer-events:none;z-index:-1}
+.hero:after{right:-54px;top:-70px;width:190px;height:190px;background:linear-gradient(145deg,#f18a35,#c95c12);opacity:1;box-shadow:inset 12px -12px 30px rgba(94,39,7,.18),0 18px 50px rgba(233,120,37,.13);animation:orbFloat 7s ease-in-out infinite alternate}
+.heroGlow{position:absolute;width:120px;height:120px;right:45px;bottom:-75px;border-radius:50%;background:rgba(255,170,90,.10);filter:blur(24px);pointer-events:none}
+.heroTopline{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:17px}
+.heroKicker{font-size:9px!important;color:#a9a39a!important;letter-spacing:.15em;font-weight:900;text-transform:uppercase}
+.heroStatus{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border:1px solid rgba(99,193,116,.22);background:rgba(99,193,116,.07);border-radius:999px;color:#9bd1a3;font-size:8px;font-weight:900;letter-spacing:.08em}
+.heroStatus i{width:5px;height:5px;border-radius:50%;background:#63c174;box-shadow:0 0 8px rgba(99,193,116,.7);animation:livePulse 2s ease-in-out infinite}
+.heroWelcome{position:relative;z-index:2;display:block;font-size:12px!important;color:#efb584!important;font-weight:800;letter-spacing:.02em;margin-bottom:7px}
+.hero h1{position:relative;z-index:2;font-size:clamp(26px,7vw,32px);line-height:1.04;margin:0 0 10px;max-width:82%;letter-spacing:-.025em;text-shadow:0 2px 20px rgba(0,0,0,.18)}
+.hero p{position:relative;z-index:2;color:#d5d0c8;margin:0 0 16px;font-size:13px;line-height:1.45;max-width:88%}
+.joinCodeCard{position:relative;z-index:3;margin-top:5px;padding:11px 12px 10px;border:1px solid rgba(255,255,255,.11);border-radius:15px;background:linear-gradient(135deg,rgba(255,255,255,.095),rgba(255,255,255,.035));box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 12px 28px rgba(0,0,0,.16);backdrop-filter:blur(12px);overflow:hidden}
+.joinCodeCard:before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 0%,rgba(255,255,255,.07) 48%,transparent 72%);transform:translateX(-100%);animation:codeShimmer 5s ease-in-out infinite;pointer-events:none}
+.joinCodeHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}.joinCodeHead span{font-size:8px;color:#efb584;font-weight:950;letter-spacing:.15em}.joinCodeHead small{font-size:9px;color:#aaa39a}
+.joinCodeValue{display:flex;align-items:center;gap:8px;color:#fff;line-height:1}.joinCodeValue span{font-variant-numeric:tabular-nums;letter-spacing:.16em;font-size:22px;font-weight:950;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:9px 10px 8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}.joinCodeValue em{font-style:normal;color:#e97825;font-size:13px;font-weight:900}
+.joinCodeFooter{display:flex;align-items:center;justify-content:space-between;margin-top:8px;color:#8f8a83;font-size:9px}.joinCodeFooter b{color:#e8b07d;font-size:8px;letter-spacing:.12em}
+@keyframes codeShimmer{0%,55%,100%{transform:translateX(-110%)}70%{transform:translateX(120%)}}
+@keyframes livePulse{0%,100%{opacity:.65;transform:scale(.9)}50%{opacity:1;transform:scale(1.15)}}
+@media(max-width:390px){.hero{padding:22px 15px 15px}.heroTopline{margin-bottom:14px}.heroKicker{font-size:8px!important}.heroStatus{font-size:7px;padding:4px 7px}.hero h1{font-size:25px}.joinCodeHead small{display:none}.joinCodeValue span{font-size:20px;padding:8px 9px}}
