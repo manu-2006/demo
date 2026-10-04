@@ -9,7 +9,7 @@ export default defineConfig({
       closeBundle() {
         const dist = path.resolve('dist')
         const index = path.join(dist, 'index.html')
-        for (const route of ['admin', 'kitchen']) {
+        for (const route of ['admin', 'kitchen', 't']) {
           const dir = path.join(dist, route)
           fs.mkdirSync(dir, { recursive: true })
           fs.copyFileSync(index, path.join(dir, 'index.html'))
