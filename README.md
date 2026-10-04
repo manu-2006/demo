@@ -1,4 +1,8 @@
-# QR Restaurant OS
+# ZELVON — Restaurant Operating System
+
+**Scan · Order · Pay · Grow**
+
+ZELVON is a premium multi-tenant restaurant operating platform.
 
 Secure multi-tenant QR ordering platform for restaurants in Karnataka.
 
