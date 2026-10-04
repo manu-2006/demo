@@ -293,6 +293,7 @@ app.get('/api/service-requests', async (req, res) => {
       .select('id,type,status,created_at')
       .eq('session_id', session.session_id)
       .eq('restaurant_id', session.restaurant_id)
+      .in('status', ['pending','acknowledged'])
       .order('created_at', { ascending: false })
       .limit(20);
     if (error) throw error;
@@ -300,6 +301,29 @@ app.get('/api/service-requests', async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Unable to load service requests' });
+  }
+});
+
+app.patch('/api/service-requests/:id', async (req, res) => {
+  try {
+    const session = await customerSession(req);
+    if (!session) return res.status(401).json({ error: 'Table session expired' });
+    const body = z.object({ status: z.literal('cancelled') }).parse(req.body);
+    const { data, error } = await supabase
+      .from('service_requests')
+      .update({ status: body.status })
+      .eq('id', req.params.id)
+      .eq('session_id', session.session_id)
+      .eq('restaurant_id', session.restaurant_id)
+      .in('status', ['pending','acknowledged'])
+      .select('id,type,status,created_at')
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return res.status(404).json({ error: 'Request not found or already completed' });
+    res.json(data);
+  } catch (e) {
+    console.error(e);
+    res.status(400).json({ error: 'Could not cancel request' });
   }
 });
 
