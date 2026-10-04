@@ -76,7 +76,7 @@ app.get('/health', async (_, res) => {
   res.json({ ok: true, service: 'qr-restaurant-api', database: 'supabase' });
 });
 
-app.get('/api/table/:shortCode',async(req,res)=>{try{const{data:table}=await supabase.from('restaurant_tables').select('id,label,active,public_token,restaurants!inner(id,name,slug)').eq('short_code',req.params.shortCode).eq('active',true).maybeSingle();if(!table)return res.status(404).json({error:'Invalid table QR'});const restaurant=table.restaurants;const{data:items,error}=await supabase.from('menu_items').select('id,name_en,name_kn,description_en,description_kn,price,price_large,image_url,category,is_available,sort_order').eq('restaurant_id',restaurant.id).eq('is_available',true).order('category').order('sort_order');if(error)throw error;res.json({restaurant_id:restaurant.id,restaurant_name:restaurant.name,restaurant_slug:restaurant.slug,table_id:table.id,table_label:table.label,table_code:req.params.shortCode,items})}catch(e){console.error(e);res.status(500).json({error:'Server error'})}});
+app.get('/api/table/:shortCode',async(req,res)=>{try{const{data:table}=await supabase.from('restaurant_tables').select('id,label,active,public_token,restaurants!inner(id,name,slug,status)').eq('short_code',req.params.shortCode).eq('active',true).eq('restaurants.status','active').maybeSingle();if(!table)return res.status(404).json({error:'Invalid table QR'});const restaurant=table.restaurants;const{data:items,error}=await supabase.from('menu_items').select('id,name_en,name_kn,description_en,description_kn,price,price_large,image_url,category,is_available,sort_order').eq('restaurant_id',restaurant.id).eq('is_available',true).order('category').order('sort_order');if(error)throw error;res.json({restaurant_id:restaurant.id,restaurant_name:restaurant.name,restaurant_slug:restaurant.slug,table_id:table.id,table_label:table.label,table_code:req.params.shortCode,items})}catch(e){console.error(e);res.status(500).json({error:'Server error'})}});
 
 app.get('/api/menu/:restaurantSlug/:tableToken', async (req, res) => {
   try {
@@ -131,7 +131,7 @@ async function adminAuth(req, res, next) {
     const decoded = jwt.verify(token, JWT_SECRET);
     const { data, error } = await supabase
       .from('restaurant_members')
-      .select('restaurant_id,role,users!inner(id,email),restaurants!inner(name)')
+      .select('restaurant_id,role,users!inner(id,email),restaurants!inner(name,status)').eq('restaurants.status','active')
       .eq('user_id', decoded.sub)
       .limit(1)
       .maybeSingle();
@@ -765,6 +765,95 @@ app.post('/api/service-requests', async (req, res) => {
     console.error(e);
     res.status(400).json({ error: 'Could not create request' });
   }
+});
+
+
+// Platform SaaS control center
+async function platformAuth(req,res,next){
+  try{
+    const token=req.cookies?.platform_session;
+    if(!token||!JWT_SECRET)return res.status(401).json({error:'Unauthorized'});
+    const decoded=jwt.verify(token,JWT_SECRET);
+    const{data:user,error}=await supabase.from('users').select('id,email').eq('id',decoded.sub).maybeSingle();
+    const platformEmail=(process.env.PLATFORM_ADMIN_EMAIL||'').trim().toLowerCase();
+    if(error||!user||!platformEmail||user.email.toLowerCase()!==platformEmail)return res.status(403).json({error:'Platform access denied'});
+    req.platform={user_id:user.id,email:user.email};
+    next();
+  }catch{return res.status(401).json({error:'Unauthorized'})}
+}
+
+app.post('/api/platform/login',async(req,res)=>{
+  try{
+    const body=z.object({email:z.string().email().max(200),password:z.string().min(8).max(200)}).parse(req.body);
+    const platformEmail=(process.env.PLATFORM_ADMIN_EMAIL||'').trim().toLowerCase();
+    if(!platformEmail||body.email.toLowerCase()!==platformEmail)return res.status(403).json({error:'Platform access denied'});
+    const{data:user,error}=await supabase.from('users').select('id,email,password_hash').ilike('email',body.email).maybeSingle();
+    if(error||!user||!(await bcrypt.compare(body.password,user.password_hash)))return res.status(401).json({error:'Invalid credentials'});
+    const token=jwt.sign({sub:user.id,platform:true},JWT_SECRET,{expiresIn:'12h'});
+    res.cookie('platform_session',token,{httpOnly:true,secure:true,sameSite:'none',path:'/',maxAge:12*60*60*1000});
+    res.json({ok:true});
+  }catch(e){console.error(e);res.status(400).json({error:'Invalid platform login request'})}
+});
+app.post('/api/platform/logout',(req,res)=>{
+  res.clearCookie('platform_session',{httpOnly:true,secure:true,sameSite:'none',path:'/'});
+  res.json({ok:true});
+});
+app.get('/api/platform/me',platformAuth,(req,res)=>res.json({admin:req.platform}));
+
+app.get('/api/platform/restaurants',platformAuth,async(req,res)=>{
+  try{
+    const{data:restaurants,error}=await supabase.from('restaurants').select('id,name,slug,status,plan,onboarding_completed,created_at').order('created_at',{ascending:false});
+    if(error)throw error;
+    const ids=(restaurants||[]).map(r=>r.id);
+    const [{data:tables},{data:orders}]=await Promise.all([
+      ids.length?supabase.from('restaurant_tables').select('restaurant_id').in('restaurant_id',ids):Promise.resolve({data:[]}),
+      ids.length?supabase.from('orders').select('restaurant_id').in('restaurant_id',ids):Promise.resolve({data:[]})
+    ]);
+    const tc={},oc={};
+    for(const x of tables||[])tc[x.restaurant_id]=(tc[x.restaurant_id]||0)+1;
+    for(const x of orders||[])oc[x.restaurant_id]=(oc[x.restaurant_id]||0)+1;
+    res.json({restaurants:(restaurants||[]).map(r=>({...r,table_count:tc[r.id]||0,order_count:oc[r.id]||0}))});
+  }catch(e){console.error(e);res.status(500).json({error:'Unable to load restaurants'})}
+});
+
+app.post('/api/platform/restaurants',platformAuth,async(req,res)=>{
+  try{
+    const body=z.object({
+      name:z.string().min(2).max(120),
+      slug:z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(80),
+      ownerEmail:z.string().email().max(200),
+      ownerName:z.string().max(120).optional().default(''),
+      ownerPassword:z.string().min(8).max(200)
+    }).parse(req.body);
+    const slug=body.slug.toLowerCase().trim(),email=body.ownerEmail.toLowerCase().trim();
+    const{data:slugExists}=await supabase.from('restaurants').select('id').eq('slug',slug).maybeSingle();
+    if(slugExists)return res.status(409).json({error:'Restaurant slug already exists'});
+    const{data:emailExists}=await supabase.from('users').select('id').ilike('email',email).maybeSingle();
+    if(emailExists)return res.status(409).json({error:'Owner email already exists'});
+    const{data:restaurant,error:restaurantError}=await supabase.from('restaurants').insert({name:body.name.trim(),slug,status:'active',plan:'starter',onboarding_completed:false}).select('id,name,slug,status,plan,onboarding_completed,created_at').single();
+    if(restaurantError)throw restaurantError;
+    const hash=await bcrypt.hash(body.ownerPassword,12);
+    const{data:user,error:userError}=await supabase.from('users').insert({email,password_hash:hash}).select('id,email').single();
+    if(userError){
+      await supabase.from('restaurants').delete().eq('id',restaurant.id);
+      throw userError;
+    }
+    const{error:memberError}=await supabase.from('restaurant_members').insert({user_id:user.id,restaurant_id:restaurant.id,role:'owner'});
+    if(memberError){
+      await supabase.from('users').delete().eq('id',user.id);
+      await supabase.from('restaurants').delete().eq('id',restaurant.id);
+      throw memberError;
+    }
+    res.status(201).json({restaurant,owner:{email:user.email,name:body.ownerName||null}});
+  }catch(e){console.error(e);res.status(400).json({error:'Unable to create restaurant'})}
+});
+
+app.patch('/api/platform/restaurants/:id',platformAuth,async(req,res)=>{
+  try{
+    const body=z.object({status:z.enum(['active','suspended','trial']).optional(),plan:z.enum(['starter','professional','business']).optional(),onboarding_completed:z.boolean().optional()}).parse(req.body);
+    const{data,error}=await supabase.from('restaurants').update(body).eq('id',req.params.id).select('id,name,slug,status,plan,onboarding_completed,created_at').maybeSingle();
+    if(error)throw error;if(!data)return res.status(404).json({error:'Restaurant not found'});res.json({restaurant:data});
+  }catch(e){console.error(e);res.status(400).json({error:'Unable to update restaurant'})}
 });
 
 app.listen(process.env.PORT || 10000, () => console.log('API running on Supabase'));
