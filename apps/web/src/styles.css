@@ -427,3 +427,8 @@ header{
 .adminTitleActions{display:flex;align-items:center;gap:8px}
 .adminMenuEditButton{background:#e97825!important;color:#fff!important;border-color:#e97825!important;min-width:100px}
 @media(max-width:600px){.adminTitleActions{width:100%;justify-content:flex-end}.adminTitleActions button{padding:8px 10px}.adminTitle{align-items:flex-start;flex-direction:column}}
+
+.qrPrintBackdrop{position:fixed;inset:0;z-index:200;background:rgba(20,17,13,.62);display:grid;place-items:center;padding:20px}
+.qrPrintCard{width:min(390px,100%);background:#fffaf3;border:1px solid #e1d5c8;border-radius:20px;padding:24px;text-align:center;box-shadow:0 30px 90px #0006}
+.qrPrintBrand{font-size:15px;font-weight:950;letter-spacing:.16em;color:#e97825}.qrPrintRestaurant{font-size:11px;color:#81766d;margin-top:3px}.qrPrintCard h2{margin:18px 0 3px;font-size:28px}.qrPrintCard p{margin:0 0 16px;color:#756c62;font-size:12px}.qrPrintCard img{display:block;width:260px;height:260px;margin:0 auto 14px;background:#fff}.qrPrintCard small{display:block;font-size:8px;color:#9a8f85;word-break:break-all}.qrPrintActions{display:flex;gap:8px;margin-top:18px}.qrPrintActions button{flex:1;height:42px;border:1px solid #d9cec2;background:#fff;border-radius:9px;font-weight:800}.qrPrintActions button:first-child{background:#e97825;color:#fff;border-color:#e97825}
+@media print{body>*{display:none!important}.qrPrintBackdrop{display:grid!important;position:static!important;background:#fff!important;padding:0!important}.qrPrintCard{box-shadow:none!important;border:0!important;width:100%!important;max-width:420px!important}.qrPrintActions{display:none!important}}
