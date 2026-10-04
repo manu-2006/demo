@@ -350,3 +350,8 @@ header{
 .kitchenStats .kitchenOldest b{color:#c15d16}
 @media(max-width:800px){.kitchenStats{grid-template-columns:repeat(2,1fr);padding:8px 10px}.kitchenStats>div:last-child{grid-column:1/-1}}
 .kitchenServiceRequest>div{display:flex;gap:5px}.kitchenRequestCancel{background:#fff!important;color:#b33a2f!important;border:1px solid #ead0ca!important}.kitchenLogoutButton{background:#fff!important;color:#b33a2f!important;border-color:#e6cbc5!important}.kitchenLogoutButton:hover{background:#fff3f0!important}
+.kitchenOfflineBanner{display:flex;align-items:center;gap:10px;padding:9px 18px;background:#fff0ee;border-bottom:1px solid #e5c6c0;color:#8f2e26;font-size:11px}
+.kitchenOfflineBanner strong{font-size:12px}
+.kitchenOfflineBanner span{flex:1;color:#a64b42}
+.kitchenOfflineBanner button{border:1px solid #d8aaa3;background:#fff;border-radius:8px;padding:6px 10px;color:#8f2e26;font-weight:800;font-size:10px}
+@media(max-width:600px){.kitchenOfflineBanner{padding:8px 10px;flex-wrap:wrap}.kitchenOfflineBanner span{flex-basis:100%;order:3}}
