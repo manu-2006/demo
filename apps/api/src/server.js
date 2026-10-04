@@ -195,17 +195,30 @@ app.post('/api/admin/logout', (req, res) => {
   res.json({ ok: true });
 });
 
+app.patch('/api/admin/orders/:id/payment', adminAuth, async (req,res) => {
+  try {
+    const body = z.object({ payment_method: z.enum(['cash','upi','card','other']) }).parse(req.body);
+    const { data, error } = await supabase.from('orders')
+      .update({payment_status:'paid',payment_method:body.payment_method,paid_at:new Date().toISOString()})
+      .eq('id',req.params.id).eq('restaurant_id',req.admin.restaurant_id).eq('payment_status','unpaid')
+      .select('id,payment_status,payment_method,paid_at').maybeSingle();
+    if(error) throw error;
+    if(!data) return res.status(404).json({error:'Order not found or already paid'});
+    res.json(data);
+  } catch(e) { console.error(e); res.status(400).json({error:'Could not mark order as paid'}); }
+});
+
 app.get('/api/admin/orders', adminAuth, async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('orders')
-      .select('id,status,total,created_at,restaurant_tables!inner(label),order_items(id,name_snapshot,quantity,price_snapshot,variant_snapshot)')
+      .select('id,status,total,created_at,payment_status,payment_method,paid_at,restaurant_tables!inner(label),order_items(id,name_snapshot,quantity,price_snapshot,variant_snapshot)')
       .eq('restaurant_id', req.admin.restaurant_id)
       .neq('status', 'served')
       .order('created_at', { ascending: false });
     if (error) throw error;
     const orders = (data || []).map(o => ({
-      id: o.id, status: o.status, total: o.total, created_at: o.created_at,
+      id: o.id, status: o.status, total: o.total, created_at: o.created_at, payment_status: o.payment_status, payment_method: o.payment_method, paid_at: o.paid_at,
       table_label: o.restaurant_tables.label,
       items: (o.order_items || []).map(i => ({ name: i.name_snapshot, quantity: i.quantity, price: i.price_snapshot, variant: i.variant_snapshot }))
     }));
@@ -281,6 +294,11 @@ app.post('/api/admin/tables/:id/close-session', adminAuth, async (req,res) => {
       .maybeSingle();
     if (sessionError) throw sessionError;
     if (!session) return res.status(404).json({error:'Table session not found'});
+    const { data: unpaidOrders, error: unpaidError } = await supabase
+      .from('orders').select('id').eq('session_id',session.id).neq('status','cancelled').eq('payment_status','unpaid');
+    if(unpaidError) throw unpaidError;
+    if(unpaidOrders?.length) return res.status(409).json({error:'Please settle all orders before closing the table'});
+    
     const { error: closeError } = await supabase
       .from('customer_sessions')
       .update({expires_at:now})
