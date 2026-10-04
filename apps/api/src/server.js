@@ -20,7 +20,7 @@ app.use(cors({
   origin: process.env.WEB_ORIGIN || 'http://localhost:5173',
   credentials: true
 }));
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '1mb', verify: (req, _res, buf) => { req.rawBody = buf; } }));
 app.use(cookieParser());
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false }));
 
@@ -385,6 +385,31 @@ app.get('/api/orders', async (req, res) => {
   }
 });
 
+async function razorpayRequest(path, options = {}) {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) throw new Error('Razorpay is not configured');
+  const auth = Buffer.from(process.env.RAZORPAY_KEY_ID + ':' + process.env.RAZORPAY_KEY_SECRET).toString('base64');
+  const response = await fetch('https://api.razorpay.com/v1' + path, {
+    ...options,
+    headers: {
+      Authorization: 'Basic ' + auth,
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data?.error?.description || 'Razorpay request failed');
+    error.status = response.status;
+    throw error;
+  }
+  return data;
+}
+
+function verifyHmac(payload, signature, secret) {
+  const expected = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(String(signature || '')));
+}
+
 app.get('/api/bill', async (req,res) => {
   try {
     const session = await customerSession(req);
@@ -407,10 +432,135 @@ app.get('/api/bill', async (req,res) => {
     res.json({
       restaurant_name:session.restaurant_name,table_label:session.table_label,orders,
       grand_total:grandTotal,unpaid_total:unpaidTotal,
-      payment_mode:process.env.DEMO_PAYMENT_MODE === 'false' ? 'live' : 'demo',
+      payment_mode:(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET && process.env.DEMO_PAYMENT_MODE !== 'true') ? 'live' : 'demo',
+      payment_key_id:(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET && process.env.DEMO_PAYMENT_MODE !== 'true') ? process.env.RAZORPAY_KEY_ID : null,
       payment_vpa:process.env.RESTAURANT_UPI_VPA || 'demo@upi'
     });
   } catch(e) { console.error(e); res.status(500).json({error:'Unable to load bill'}); }
+});
+
+app.post('/api/bill/payment/order', async (req,res) => {
+  try {
+    const session = await customerSession(req);
+    if (!session) return res.status(401).json({error:'Table session expired'});
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET || process.env.DEMO_PAYMENT_MODE === 'true') {
+      return res.status(503).json({error:'Live payments are not configured'});
+    }
+    const { data: orders, error } = await supabase
+      .from('orders')
+      .select('id,total,payment_status,status')
+      .eq('session_id',session.session_id)
+      .eq('restaurant_id',session.restaurant_id)
+      .neq('status','cancelled')
+      .eq('payment_status','unpaid')
+      .order('created_at',{ascending:true});
+    if (error) throw error;
+    if (!orders?.length) return res.status(400).json({error:'No unpaid orders'});
+    const amount = orders.reduce((sum,o)=>sum+Number(o.total),0);
+    const amountPaise = Math.round(amount * 100);
+    const receipt = ('mt_' + session.session_id.replace(/-/g,'')).slice(0,40);
+    const razorOrder = await razorpayRequest('/orders', {
+      method:'POST',
+      body:JSON.stringify({amount:amountPaise,currency:'INR',receipt,payment_capture:1})
+    });
+    const {data:payment,error:paymentError}=await supabase.from('bill_payments').insert({
+      restaurant_id:session.restaurant_id,
+      session_id:session.session_id,
+      order_ids:orders.map(o=>o.id),
+      amount,
+      currency:'INR',
+      provider:'razorpay',
+      provider_order_id:razorOrder.id,
+      status:'created'
+    }).select('id').single();
+    if(paymentError) throw paymentError;
+    res.json({
+      payment_id:payment.id,
+      key_id:process.env.RAZORPAY_KEY_ID,
+      order_id:razorOrder.id,
+      amount:amountPaise,
+      currency:'INR',
+      name:session.restaurant_name,
+      description:'Table bill · '+session.table_label
+    });
+  } catch(e) {
+    console.error(e);
+    res.status(400).json({error:'Could not start payment'});
+  }
+});
+
+app.post('/api/bill/payment/verify', async (req,res) => {
+  try {
+    const session=await customerSession(req);
+    if(!session) return res.status(401).json({error:'Table session expired'});
+    const body=z.object({
+      razorpay_order_id:z.string().min(1),
+      razorpay_payment_id:z.string().min(1),
+      razorpay_signature:z.string().min(1)
+    }).parse(req.body);
+    const {data:payment,error}=await supabase.from('bill_payments')
+      .select('id,session_id,restaurant_id,order_ids,amount,status,provider_order_id')
+      .eq('provider_order_id',body.razorpay_order_id)
+      .eq('session_id',session.session_id)
+      .eq('restaurant_id',session.restaurant_id)
+      .maybeSingle();
+    if(error) throw error;
+    if(!payment) return res.status(404).json({error:'Payment session not found'});
+    if(!verifyHmac(body.razorpay_order_id+'|'+body.razorpay_payment_id,body.razorpay_signature,process.env.RAZORPAY_KEY_SECRET)) {
+      return res.status(400).json({error:'Payment signature verification failed'});
+    }
+    const razorPayment=await razorpayRequest('/payments/'+encodeURIComponent(body.razorpay_payment_id));
+    const expectedPaise=Math.round(Number(payment.amount)*100);
+    if(razorPayment.order_id!==payment.provider_order_id || Number(razorPayment.amount)!==expectedPaise || razorPayment.status!=='captured') {
+      return res.status(400).json({error:'Payment is not captured for the expected amount'});
+    }
+    const now=new Date().toISOString();
+    const {error:updatePaymentError}=await supabase.from('bill_payments')
+      .update({provider_payment_id:body.razorpay_payment_id,status:'paid',paid_at:now})
+      .eq('id',payment.id);
+    if(updatePaymentError) throw updatePaymentError;
+    const {error:updateOrdersError}=await supabase.from('orders')
+      .update({payment_status:'paid',payment_method:'upi',paid_at:now})
+      .in('id',payment.order_ids)
+      .eq('session_id',session.session_id)
+      .eq('restaurant_id',session.restaurant_id)
+      .eq('payment_status','unpaid');
+    if(updateOrdersError) throw updateOrdersError;
+    res.json({ok:true,payment_id:body.razorpay_payment_id});
+  } catch(e) {
+    console.error(e);
+    res.status(400).json({error:e instanceof z.ZodError?'Invalid payment response':(e.message||'Payment verification failed')});
+  }
+});
+
+app.post('/api/webhooks/razorpay', async (req,res) => {
+  try {
+    if(!process.env.RAZORPAY_WEBHOOK_SECRET) return res.status(503).send('Webhook not configured');
+    const signature=req.headers['x-razorpay-signature'];
+    if(!verifyHmac(req.rawBody || JSON.stringify(req.body),signature,process.env.RAZORPAY_WEBHOOK_SECRET)) return res.status(400).send('Invalid signature');
+    const event=req.body?.event;
+    if(event==='payment.captured'){
+      const entity=req.body?.payload?.payment?.entity;
+      const providerOrderId=entity?.order_id;
+      const providerPaymentId=entity?.id;
+      if(providerOrderId && providerPaymentId){
+        const {data:payment,error}=await supabase.from('bill_payments')
+          .select('id,order_ids,amount,status')
+          .eq('provider_order_id',providerOrderId)
+          .maybeSingle();
+        if(error) throw error;
+        if(payment && payment.status!=='paid' && Number(entity.amount)===Math.round(Number(payment.amount)*100)){
+          const now=new Date().toISOString();
+          await supabase.from('bill_payments').update({provider_payment_id:providerPaymentId,status:'paid',paid_at:now}).eq('id',payment.id);
+          await supabase.from('orders').update({payment_status:'paid',payment_method:'upi',paid_at:now}).in('id',payment.order_ids).eq('payment_status','unpaid');
+        }
+      }
+    }
+    res.json({ok:true});
+  } catch(e) {
+    console.error(e);
+    res.status(400).send('Webhook processing failed');
+  }
 });
 
 app.post('/api/bill/demo-pay', async (req,res) => {
