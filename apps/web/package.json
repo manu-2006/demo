@@ -1,1 +1,20 @@
-{"name":"qr-restaurant-web","private":true,"version":"0.1.0","type":"module","scripts":{"dev":"vite --host 0.0.0.0","build":"vite build","preview":"vite preview --host 0.0.0.0"},"dependencies":{"@vitejs/plugin-react":"latest","vite":"latest","react":"latest","react-dom":"latest","lucide-react":"latest","qrcode":"latest"},"devDependencies":{}}
+{
+  "name": "qr-restaurant-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build && mkdir -p dist/admin dist/kitchen dist/platform dist/t && cp dist/index.html dist/admin/index.html && cp dist/index.html dist/kitchen/index.html && cp dist/index.html dist/platform/index.html && cp dist/index.html dist/t/index.html",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "vite": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "lucide-react": "latest",
+    "qrcode": "latest"
+  },
+  "devDependencies": {}
+}
