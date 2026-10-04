@@ -547,3 +547,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 *::-webkit-scrollbar{width:7px;height:7px}
 *::-webkit-scrollbar-track{background:transparent}
 *::-webkit-scrollbar-thumb{background:#cfc1b2;border-radius:999px;border:2px solid transparent;background-clip:padding-box}
+
+
+/* Premium confirmation dialogs */
+.premiumConfirmBackdrop{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:20px;background:rgba(5,8,14,.68);backdrop-filter:blur(16px);animation:fadeIn .18s ease both}
+.premiumConfirm{width:min(460px,100%);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:26px;background:linear-gradient(145deg,rgba(28,34,45,.98),rgba(13,17,25,.98));box-shadow:0 30px 90px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.03) inset;animation:dialogIn .24s cubic-bezier(.2,.8,.2,1) both;color:#fff}
+.confirmIcon{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;margin-bottom:18px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.1);font-weight:800;font-size:22px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.confirmIcon.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.28);color:#ff8b8b}
+.confirmCopy{display:grid;gap:7px}.confirmEyebrow{font-size:11px;letter-spacing:.14em;font-weight:800;opacity:.52}.confirmCopy h3{margin:0;font-size:22px;line-height:1.2}.confirmCopy p{margin:0;color:rgba(255,255,255,.64);font-size:14px;line-height:1.55}
+.confirmActions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}.confirmActions button{min-height:44px;padding:0 17px;border-radius:13px;border:1px solid rgba(255,255,255,.1);font-weight:750;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,background .18s ease}.confirmActions button:hover{transform:translateY(-1px)}.confirmCancel{background:rgba(255,255,255,.06);color:#fff}.confirmPrimary{background:#fff;color:#111;box-shadow:0 8px 24px rgba(0,0,0,.2)}.confirmDanger{background:#ef4444;color:#fff;border-color:#ef4444!important;box-shadow:0 8px 24px rgba(239,68,68,.2)}
+@keyframes dialogIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@media(max-width:560px){.premiumConfirm{border-radius:20px;padding:22px}.confirmActions{display:grid;grid-template-columns:1fr 1fr}.confirmActions button{width:100%}}
