@@ -90,3 +90,7 @@
 .closeTableButton{width:100%;margin-top:11px;min-height:34px;border:1px solid #e3c8b9;border-radius:10px;background:#fff;color:#9d3b24;font-size:10px;font-weight:900}
 .closeTableButton:active{transform:scale(.98)}
 .tableAdminCard.occupied .closeTableButton{background:#fff7ef}
+
+.paymentRow{display:flex;justify-content:flex-end;margin-top:9px}
+.payButton{border:0;border-radius:10px;background:#ea7620;color:#fff;min-height:36px;padding:0 14px;font-size:11px;font-weight:900}
+.paidBadge{border:1px solid #b8d8bb;background:#eff8f0;color:#31723a;border-radius:10px;min-height:34px;padding:8px 11px;font-size:10px;font-weight:900}
