@@ -76,7 +76,7 @@ app.get('/health', async (_, res) => {
   res.json({ ok: true, service: 'qr-restaurant-api', database: 'supabase' });
 });
 
-app.get('/api/table/:shortCode',async(req,res)=>{try{const{data:table}=await supabase.from('restaurant_tables').select('id,label,active,public_token,restaurants!inner(id,name,slug,status)').eq('short_code',req.params.shortCode).eq('active',true).eq('restaurants.status','active').maybeSingle();if(!table)return res.status(404).json({error:'Invalid table QR'});const restaurant=table.restaurants;const{data:items,error}=await supabase.from('menu_items').select('id,name_en,name_kn,description_en,description_kn,price,price_large,image_url,category,is_available,sort_order').eq('restaurant_id',restaurant.id).eq('is_available',true).order('category').order('sort_order');if(error)throw error;res.json({restaurant_id:restaurant.id,restaurant_name:restaurant.name,restaurant_slug:restaurant.slug,table_id:table.id,table_label:table.label,table_code:req.params.shortCode,items})}catch(e){console.error(e);res.status(500).json({error:'Server error'})}});
+app.get('/api/table/:shortCode',async(req,res)=>{try{const{data:table}=await supabase.from('restaurant_tables').select('id,label,active,public_token,restaurants!inner(id,name,slug,status,logo_url,cover_image_url,phone,address,google_maps_url,instagram_url,facebook_url,default_language)').eq('short_code',req.params.shortCode).eq('active',true).eq('restaurants.status','active').maybeSingle();if(!table)return res.status(404).json({error:'Invalid table QR'});const restaurant=table.restaurants;const{data:items,error}=await supabase.from('menu_items').select('id,name_en,name_kn,description_en,description_kn,price,price_large,image_url,category,is_available,sort_order').eq('restaurant_id',restaurant.id).eq('is_available',true).order('category').order('sort_order');if(error)throw error;res.json({restaurant_id:restaurant.id,restaurant_name:restaurant.name,restaurant_slug:restaurant.slug,restaurant_branding:{logo_url:restaurant.logo_url,cover_image_url:restaurant.cover_image_url,phone:restaurant.phone,address:restaurant.address,google_maps_url:restaurant.google_maps_url,instagram_url:restaurant.instagram_url,facebook_url:restaurant.facebook_url,default_language:restaurant.default_language},table_id:table.id,table_label:table.label,table_code:req.params.shortCode,items})}catch(e){console.error(e);res.status(500).json({error:'Server error'})}});
 
 app.get('/api/menu/:restaurantSlug/:tableToken', async (req, res) => {
   try {
@@ -201,6 +201,28 @@ function canManageMenu(req,res){
   if(!['owner','manager'].includes(req.admin.role)){res.status(403).json({error:'Only owners and managers can manage the menu'});return false}
   return true
 }
+app.post('/api/admin/menu/bulk', adminAuth, async (req,res)=>{
+  if(!canManageMenu(req,res))return;
+  try{
+    const body=z.object({items:z.array(z.object({
+      name_en:z.string().min(1).max(150),
+      name_kn:z.string().max(150).optional().default(''),
+      description_en:z.string().max(500).optional().default(''),
+      description_kn:z.string().max(500).optional().default(''),
+      price:z.coerce.number().nonnegative(),
+      price_large:z.union([z.coerce.number().nonnegative(),z.null()]).optional().default(null),
+      image_url:z.string().url().max(1000).optional().or(z.literal('')).default(''),
+      category:z.string().min(1).max(100),
+      is_available:z.boolean().default(true),
+      sort_order:z.coerce.number().int().default(0)
+    })).min(1).max(500)}).parse(req.body);
+    const rows=body.items.map(x=>({...x,restaurant_id:req.admin.restaurant_id}));
+    const{data,error}=await supabase.from('menu_items').insert(rows).select('id,name_en,name_kn,description_en,description_kn,price,price_large,image_url,category,is_available,sort_order');
+    if(error)throw error;
+    res.status(201).json({inserted:(data||[]).length,items:data||[]});
+  }catch(e){console.error(e);res.status(400).json({error:'Unable to import menu items'})}
+});
+
 app.post('/api/admin/menu', adminAuth, async (req,res)=>{
   if(!canManageMenu(req,res))return;
   try{
