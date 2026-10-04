@@ -522,6 +522,77 @@ app.post('/api/admin/tables/:id/mark-paid', adminAuth, async (req,res) => {
   }catch(e){console.error(e);res.status(400).json({error:e?.message||'Could not mark table payment complete'})}
 });
 
+app.get('/api/admin/bills/history', adminAuth, async (req,res) => {
+  try {
+    const [{data:orders,error:ordersError},{data:payments,error:paymentsError}] = await Promise.all([
+      supabase.from('orders')
+        .select('id,session_id,table_id,total,status,created_at,payment_status,payment_method,paid_at,restaurant_tables!inner(label),customer_sessions!inner(customer_name,created_at)')
+        .eq('restaurant_id',req.admin.restaurant_id)
+        .eq('payment_status','paid')
+        .neq('status','cancelled')
+        .order('paid_at',{ascending:false})
+        .limit(1000),
+      supabase.from('bill_payments')
+        .select('id,session_id,amount,currency,provider,provider_order_id,provider_payment_id,status,created_at,paid_at')
+        .eq('restaurant_id',req.admin.restaurant_id)
+        .eq('status','paid')
+        .order('paid_at',{ascending:false})
+        .limit(1000)
+    ]);
+    if(ordersError) throw ordersError;
+    if(paymentsError) throw paymentsError;
+
+    const paymentBySession=new Map();
+    for(const payment of (payments||[])){
+      if(!paymentBySession.has(payment.session_id)) paymentBySession.set(payment.session_id,payment);
+    }
+
+    const grouped=new Map();
+    for(const order of (orders||[])){
+      if(!order.session_id) continue;
+      let bill=grouped.get(order.session_id);
+      if(!bill){
+        const payment=paymentBySession.get(order.session_id);
+        bill={
+          id:order.session_id,
+          table_label:order.restaurant_tables?.label||'Table',
+          customer_name:order.customer_sessions?.customer_name||'Guest',
+          amount:0,
+          order_count:0,
+          order_ids:[],
+          created_at:order.customer_sessions?.created_at||order.created_at,
+          paid_at:order.paid_at||payment?.paid_at||order.created_at,
+          payment_method:payment?.provider==='razorpay'?'upi':(order.payment_method||'other'),
+          provider:payment?.provider||null,
+          transaction_id:payment?.provider_payment_id||null,
+          provider_order_id:payment?.provider_order_id||null
+        };
+        grouped.set(order.session_id,bill);
+      }
+      bill.amount+=Number(order.total||0);
+      bill.order_count+=1;
+      bill.order_ids.push(order.id);
+      if(new Date(order.paid_at||0)>new Date(bill.paid_at||0)) bill.paid_at=order.paid_at;
+      if(!bill.transaction_id){
+        const payment=paymentBySession.get(order.session_id);
+        if(payment){
+          bill.provider=payment.provider||bill.provider;
+          bill.transaction_id=payment.provider_payment_id||null;
+          bill.provider_order_id=payment.provider_order_id||null;
+          bill.payment_method=payment.provider==='razorpay'?'upi':bill.payment_method;
+          bill.paid_at=payment.paid_at||bill.paid_at;
+        }
+      }
+    }
+
+    const bills=Array.from(grouped.values()).sort((a,b)=>new Date(b.paid_at)-new Date(a.paid_at));
+    res.json({restaurant_name:req.admin.restaurant_name,bills});
+  } catch(e) {
+    console.error(e);
+    res.status(500).json({error:'Unable to load bill history'});
+  }
+});
+
 app.get('/api/admin/service-requests', adminAuth, async (req, res) => {
   try {
     const { data, error } = await supabase
