@@ -282,6 +282,7 @@ app.post('/api/admin/logout', (req, res) => {
 });
 
 app.patch('/api/admin/orders/:id/payment', adminAuth, async (req,res) => {
+  if(!['owner','manager','kitchen'].includes(req.admin.role)) return res.status(403).json({error:'Only management or kitchen can mark payments complete'});
   try {
     const body = z.object({ payment_method: z.enum(['cash','upi','card','other']) }).parse(req.body);
     const { data, error } = await supabase.from('orders')
@@ -412,6 +413,7 @@ app.get('/api/admin/tables', adminAuth, async (req, res) => {
 });
 
 app.post('/api/admin/tables/:id/close-session', adminAuth, async (req,res) => {
+  if(!['owner','manager','kitchen'].includes(req.admin.role)) return res.status(403).json({error:'Only management or kitchen can close table sessions'});
   try {
     const now = new Date().toISOString();
     const ref = req.params.id;
@@ -493,6 +495,31 @@ app.post('/api/admin/tables/:id/close-session', adminAuth, async (req,res) => {
     console.error(e);
     res.status(400).json({error:e?.message||'Could not close table session'});
   }
+});
+
+app.post('/api/admin/tables/:id/mark-paid', adminAuth, async (req,res) => {
+  if(!['owner','manager','kitchen'].includes(req.admin.role)) return res.status(403).json({error:'Only management or kitchen can mark payments complete'});
+  try{
+    const now=new Date().toISOString(), ref=req.params.id;
+    let session=null, sessionError=null;
+    const bySession=await supabase.from('customer_sessions').select('id,table_id,expires_at').eq('id',ref).eq('restaurant_id',req.admin.restaurant_id).gt('expires_at',now).maybeSingle();
+    if(bySession.error) sessionError=bySession.error;
+    else if(bySession.data) session=bySession.data;
+    else {
+      const byTable=await supabase.from('customer_sessions').select('id,table_id,expires_at').eq('table_id',ref).eq('restaurant_id',req.admin.restaurant_id).gt('expires_at',now).order('created_at',{ascending:false}).limit(1).maybeSingle();
+      sessionError=byTable.error; session=byTable.data||null;
+    }
+    if(sessionError) throw sessionError;
+    if(!session) return res.status(404).json({error:'No active customer session for this table'});
+    const {data,error}=await supabase.from('orders')
+      .update({payment_status:'paid',payment_method:'cash',paid_at:now})
+      .eq('session_id',session.id).eq('restaurant_id',req.admin.restaurant_id)
+      .neq('status','cancelled').eq('payment_status','unpaid').select('id,total');
+    if(error) throw error;
+    const paidOrders=data||[];
+    if(!paidOrders.length) return res.status(409).json({error:'There are no unpaid orders for this table'});
+    res.json({ok:true,table_id:session.table_id,session_id:session.id,paid_orders:paidOrders.length,paid_total:paidOrders.reduce((sum,o)=>sum+Number(o.total||0),0),payment_method:'cash'});
+  }catch(e){console.error(e);res.status(400).json({error:e?.message||'Could not mark table payment complete'})}
 });
 
 app.get('/api/admin/service-requests', adminAuth, async (req, res) => {
