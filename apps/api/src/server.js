@@ -297,7 +297,11 @@ app.get('/api/service-requests', async (req, res) => {
       .order('created_at', { ascending: false })
       .limit(20);
     if (error) throw error;
-    res.json({ requests: data || [] });
+    const latestByType = new Map();
+    for (const request of (data || [])) {
+      if (!latestByType.has(request.type)) latestByType.set(request.type, request);
+    }
+    res.json({ requests: Array.from(latestByType.values()) });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Unable to load service requests' });
@@ -332,6 +336,18 @@ app.post('/api/service-requests', async (req, res) => {
     const session = await customerSession(req);
     if (!session) return res.status(401).json({ error: 'Table session expired' });
     const body = z.object({ type: z.enum(['waiter','bill']) }).parse(req.body);
+    const { data: existing, error: existingError } = await supabase
+      .from('service_requests')
+      .select('id,type,status,created_at')
+      .eq('session_id', session.session_id)
+      .eq('restaurant_id', session.restaurant_id)
+      .eq('type', body.type)
+      .in('status', ['pending','acknowledged'])
+      .order('created_at', { ascending: false })
+      .limit(1);
+    if (existingError) throw existingError;
+    if (existing?.length) return res.status(200).json(existing[0]);
+
     const { data, error } = await supabase.from('service_requests').insert({
       restaurant_id: session.restaurant_id, table_id: session.table_id,
       session_id: session.session_id, type: body.type
