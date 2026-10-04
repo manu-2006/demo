@@ -234,6 +234,32 @@ app.patch('/api/admin/orders/:id', adminAuth, async (req, res) => {
   }
 });
 
+app.get('/api/admin/tables', adminAuth, async (req, res) => {
+  try {
+    const [{ data: tables, error: tableError }, { data: orders, error: orderError }, { data: requests, error: requestError }] = await Promise.all([
+      supabase.from('restaurant_tables').select('id,label,active').eq('restaurant_id', req.admin.restaurant_id).order('label'),
+      supabase.from('orders').select('id,table_id,status,total,created_at').eq('restaurant_id', req.admin.restaurant_id).not('status','in','(served,cancelled)').order('created_at',{ascending:false}),
+      supabase.from('service_requests').select('table_id,type,status').eq('restaurant_id', req.admin.restaurant_id).in('status',['pending','acknowledged'])
+    ]);
+    if (tableError) throw tableError;
+    if (orderError) throw orderError;
+    if (requestError) throw requestError;
+    const latest = new Map();
+    for (const o of (orders || [])) if (!latest.has(o.table_id)) latest.set(o.table_id,o);
+    const requestCounts = new Map();
+    for (const r of (requests || [])) requestCounts.set(r.table_id,(requestCounts.get(r.table_id)||0)+1);
+    res.json({ tables:(tables||[]).map(t=>({
+      id:t.id,label:t.label,active:t.active,
+      occupied:latest.has(t.id),
+      order:latest.get(t.id)||null,
+      requests:requestCounts.get(t.id)||0
+    }))});
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error:'Unable to load table status' });
+  }
+});
+
 app.get('/api/admin/service-requests', adminAuth, async (req, res) => {
   try {
     const { data, error } = await supabase
