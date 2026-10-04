@@ -329,3 +329,15 @@ header{
 .kitchenConnection-connecting i{background:#d9a441!important}
 .kitchenConnection-offline{color:#d9534f}
 .kitchenConnection-connecting{color:#d9a441}
+
+.kitchenFullscreen .kitchenHeader{padding:16px 24px!important}
+.kitchenFullscreen .kitchenBoard{max-width:2200px;gap:18px;padding:20px}
+.kitchenFullscreen .kitchenColumn{min-height:calc(100dvh - 130px);border-radius:18px;padding:12px}
+.kitchenFullscreen .kitchenCard{padding:16px;border-radius:16px}
+.kitchenFullscreen .kitchenCardTop b{font-size:19px}
+.kitchenFullscreen .kitchenCardTop>strong{font-size:18px}
+.kitchenFullscreen .kitchenItems>div{font-size:14px;padding:6px 0}
+.kitchenFullscreen .kitchenActions button{font-size:13px;padding:12px}
+.kitchenFullscreen .kitchenColumnHead h2{font-size:18px}
+.kitchenFullscreen .kitchenColumnHead b{min-width:30px;height:30px}
+@media(min-width:1400px){.kitchenFullscreen .kitchenBoard{grid-template-columns:repeat(3,minmax(320px,1fr))}}
