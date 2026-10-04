@@ -35,3 +35,16 @@
   .modalBackdrop.ordersBackdrop{padding:8px 8px 18px}
   .serviceModal{width:100%;max-height:76vh;border-radius:22px;padding:17px 14px 18px}
 }
+
+/* Overlay stacking fixes */
+.modalBackdrop{z-index:80}
+.noticeBackdrop{z-index:100}
+.bottomNav{z-index:50}
+.cart{z-index:45;bottom:92px}
+.orderStatus{z-index:44;bottom:166px}
+@media(max-width:480px){
+  .cart{bottom:88px}
+  .orderStatus{bottom:158px}
+  .modalBackdrop{padding:0}
+  .modal{max-height:calc(100dvh - 18px)}
+}
