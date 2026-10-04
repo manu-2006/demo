@@ -349,4 +349,4 @@ header{
 .kitchenStats .kitchenOldest{background:#fff3df;border-color:#ead4b9}
 .kitchenStats .kitchenOldest b{color:#c15d16}
 @media(max-width:800px){.kitchenStats{grid-template-columns:repeat(2,1fr);padding:8px 10px}.kitchenStats>div:last-child{grid-column:1/-1}}
-.kitchenServiceRequest>div{display:flex;gap:5px}.kitchenRequestCancel{background:#fff!important;color:#b33a2f!important;border:1px solid #ead0ca!important}
+.kitchenServiceRequest>div{display:flex;gap:5px}.kitchenRequestCancel{background:#fff!important;color:#b33a2f!important;border:1px solid #ead0ca!important}.kitchenLogoutButton{background:#fff!important;color:#b33a2f!important;border-color:#e6cbc5!important}.kitchenLogoutButton:hover{background:#fff3f0!important}
