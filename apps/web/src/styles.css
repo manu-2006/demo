@@ -694,3 +694,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 @keyframes codeShimmer{0%,55%,100%{transform:translateX(-110%)}70%{transform:translateX(120%)}}
 @keyframes livePulse{0%,100%{opacity:.65;transform:scale(.9)}50%{opacity:1;transform:scale(1.15)}}
 @media(max-width:390px){.hero{padding:22px 15px 15px}.heroTopline{margin-bottom:14px}.heroKicker{font-size:8px!important}.heroStatus{font-size:7px;padding:4px 7px}.hero h1{font-size:25px}.joinCodeHead small{display:none}.joinCodeValue span{font-size:20px;padding:8px 9px}}
+
+/* Premium table join-code treatment */
+.joinCodeCard{position:relative;margin-top:18px;padding:15px 16px 14px;border:1px solid rgba(233,120,37,.45);border-radius:18px;background:linear-gradient(135deg,rgba(233,120,37,.12),rgba(255,247,236,.04));box-shadow:0 10px 28px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.07)}
+.joinCodeHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:9px}
+.joinCodeHead span{font-size:11px;font-weight:800;letter-spacing:.16em;color:#f0a05e}
+.joinCodeHead small{font-size:11px;color:rgba(255,255,255,.66);text-align:right}
+.joinCodeValue{display:flex;align-items:center;justify-content:center;gap:9px;min-height:58px;padding:7px 12px;border-radius:13px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.09);letter-spacing:.18em}
+.joinCodeValue strong{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:30px;line-height:1;font-weight:900;color:#fff;letter-spacing:.12em;text-shadow:0 2px 12px rgba(233,120,37,.28)}
+.joinCodeValue em{font-style:normal;font-size:22px;color:#e97825;letter-spacing:0}
+.joinCodeFooter{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px}
+.joinCodeFooter>span{font-size:11px;color:rgba(255,255,255,.58)}
+.joinCodeCopy{border:0;border-radius:9px;padding:7px 10px;background:#e97825;color:#fff;font:700 11px inherit;cursor:pointer;box-shadow:0 5px 14px rgba(233,120,37,.22)}
+@media(max-width:480px){.joinCodeCard{padding:15px;margin-top:16px}.joinCodeHead small{max-width:145px}.joinCodeValue{min-height:64px}.joinCodeValue strong{font-size:32px}}
