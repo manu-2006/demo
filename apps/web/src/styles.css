@@ -341,3 +341,11 @@ header{
 .kitchenFullscreen .kitchenColumnHead h2{font-size:18px}
 .kitchenFullscreen .kitchenColumnHead b{min-width:30px;height:30px}
 @media(min-width:1400px){.kitchenFullscreen .kitchenBoard{grid-template-columns:repeat(3,minmax(320px,1fr))}}
+
+.kitchenStats{display:grid;grid-template-columns:repeat(5,minmax(100px,1fr));gap:8px;padding:10px 18px;background:#fffaf5;border-bottom:1px solid #e7ddd1}
+.kitchenStats>div{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #e6dbcf;border-radius:10px;padding:8px 10px;background:#fff}
+.kitchenStats span{font-size:10px;color:#81766d}
+.kitchenStats b{font-size:16px;color:#2a241f}
+.kitchenStats .kitchenOldest{background:#fff3df;border-color:#ead4b9}
+.kitchenStats .kitchenOldest b{color:#c15d16}
+@media(max-width:800px){.kitchenStats{grid-template-columns:repeat(2,1fr);padding:8px 10px}.kitchenStats>div:last-child{grid-column:1/-1}}
