@@ -284,6 +284,25 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
+app.get('/api/service-requests', async (req, res) => {
+  try {
+    const session = await customerSession(req);
+    if (!session) return res.status(401).json({ error: 'Table session expired' });
+    const { data, error } = await supabase
+      .from('service_requests')
+      .select('id,type,status,created_at')
+      .eq('session_id', session.session_id)
+      .eq('restaurant_id', session.restaurant_id)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (error) throw error;
+    res.json({ requests: data || [] });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Unable to load service requests' });
+  }
+});
+
 app.post('/api/service-requests', async (req, res) => {
   try {
     const session = await customerSession(req);
