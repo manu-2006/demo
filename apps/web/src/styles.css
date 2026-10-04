@@ -94,3 +94,24 @@
 .paymentRow{display:flex;justify-content:flex-end;margin-top:9px}
 .payButton{border:0;border-radius:10px;background:#ea7620;color:#fff;min-height:36px;padding:0 14px;font-size:11px;font-weight:900}
 .paidBadge{border:1px solid #b8d8bb;background:#eff8f0;color:#31723a;border-radius:10px;min-height:34px;padding:8px 11px;font-size:10px;font-weight:900}
+
+.billModal,.paymentModal{max-height:88vh;overflow:auto}
+.billNotice{padding:12px 14px;border:1px solid #eadfd6;background:#faf6f1;border-radius:14px;font-size:12px;color:#6d625a;margin-bottom:14px}
+.billOrders{display:grid;gap:10px}
+.billOrder{border:1px solid #eee5dd;border-radius:15px;padding:13px;background:#fff}
+.billOrderHead{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:9px}
+.billOrderHead div{display:grid;gap:3px}
+.billOrderHead span{font-size:10px;color:#8d837b}
+.paidText{color:#31723a;font-size:10px}.dueText{color:#b45c20;font-size:10px}
+.billItem,.billOrderTotal{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:12px}
+.billItem span{color:#655d57}.billOrderTotal{border-top:1px solid #f0e9e3;margin-top:5px;padding-top:9px;font-weight:700}
+.billSummary{margin-top:14px;padding:15px;border-radius:16px;background:#1d1a18;color:#fff;display:grid;gap:9px}
+.billSummary div{display:flex;justify-content:space-between;gap:12px}.billSummary span{opacity:.72;font-size:12px}.billSummary strong{font-size:14px}.billSummary div:first-child strong{font-size:18px}.billDue{color:#ffb16f}
+.payNowButton,.demoPayButton{width:100%;border:0;border-radius:14px;min-height:48px;margin-top:12px;background:#ea7620;color:#fff;font-weight:900;font-size:14px}
+.billPaidBanner{margin-top:12px;padding:13px;border-radius:13px;background:#eff8f0;color:#31723a;text-align:center;font-weight:800;font-size:12px}
+.paymentAmount{display:flex;justify-content:space-between;align-items:center;padding:17px 0}.paymentAmount span{font-size:12px;color:#766b63}.paymentAmount strong{font-size:27px}
+.demoPaymentBanner{padding:11px 13px;border:1px solid #f0d3ba;background:#fff7ef;color:#8a512a;border-radius:13px;font-size:11px;line-height:1.45;margin-bottom:12px}
+.upiCard{display:grid;gap:5px;padding:14px;border:1px solid #e9e0d8;border-radius:14px;background:#faf8f5}.upiCard span{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#8d837b}.upiCard b{font-size:16px}.upiCard small{font-size:10px;color:#8d837b;line-height:1.4}
+.phonePeButton{display:flex;align-items:center;justify-content:center;text-decoration:none;min-height:48px;border-radius:14px;margin-top:12px;background:#5f259f;color:#fff;font-size:13px;font-weight:900}
+.paymentDivider{display:flex;align-items:center;gap:10px;color:#a09790;font-size:11px;margin:15px 0}.paymentDivider:before,.paymentDivider:after{content:"";height:1px;background:#eee4dc;flex:1}
+.demoQrBox{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #eee5dd;border-radius:14px}.demoQrFake{width:86px;height:86px;border-radius:8px;border:6px solid #191715;background:repeating-linear-gradient(45deg,#fff 0 4px,#191715 4px 7px);display:grid;place-items:center;color:#191715;font-size:9px}.demoQrFake span{background:#fff;padding:2px 4px}.demoQrFake b{background:#fff;padding:2px 4px}.demoQrBox div:last-child{display:grid;gap:4px}.demoQrBox small{font-size:10px;color:#8d837b;line-height:1.35}.demoPayButton{background:#191715;margin-top:12px}
