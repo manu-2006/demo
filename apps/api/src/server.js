@@ -76,6 +76,8 @@ app.get('/health', async (_, res) => {
   res.json({ ok: true, service: 'qr-restaurant-api', database: 'supabase' });
 });
 
+app.get('/api/table/:shortCode',async(req,res)=>{try{const{data:table}=await supabase.from('restaurant_tables').select('id,label,active,public_token,restaurants!inner(id,name,slug)').eq('short_code',req.params.shortCode).eq('active',true).maybeSingle();if(!table)return res.status(404).json({error:'Invalid table QR'});const restaurant=table.restaurants;const{data:items,error}=await supabase.from('menu_items').select('id,name_en,name_kn,description_en,description_kn,price,price_large,image_url,category,is_available,sort_order').eq('restaurant_id',restaurant.id).eq('is_available',true).order('category').order('sort_order');if(error)throw error;res.json({restaurant_id:restaurant.id,restaurant_name:restaurant.name,restaurant_slug:restaurant.slug,table_id:table.id,table_label:table.label,table_code:req.params.shortCode,items})}catch(e){console.error(e);res.status(500).json({error:'Server error'})}});
+
 app.get('/api/menu/:restaurantSlug/:tableToken', async (req, res) => {
   try {
     const { data: restaurant, error: restaurantError } = await supabase
@@ -117,35 +119,7 @@ app.get('/api/menu/:restaurantSlug/:tableToken', async (req, res) => {
   }
 });
 
-app.post('/api/session', async (req, res) => {
-  try {
-    const body = z.object({
-      restaurantSlug: z.string().min(1).max(100),
-      tableToken: z.string().min(20).max(100)
-    }).parse(req.body);
-
-    const { data: restaurant } = await supabase
-      .from('restaurants').select('id').eq('slug', body.restaurantSlug).maybeSingle();
-    if (!restaurant) return res.status(404).json({ error: 'Invalid restaurant' });
-
-    const { data: table } = await supabase
-      .from('restaurant_tables').select('id,active')
-      .eq('restaurant_id', restaurant.id).eq('public_token', body.tableToken).eq('active', true).maybeSingle();
-    if (!table) return res.status(404).json({ error: 'Invalid table QR' });
-
-    const token = crypto.randomBytes(32).toString('hex');
-    const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString();
-    const { error } = await supabase.from('customer_sessions').insert({
-      restaurant_id: restaurant.id, table_id: table.id, session_token: token, expires_at: expires
-    });
-    if (error) throw error;
-    setSessionCookie(res, token);
-    res.json({ ok: true });
-  } catch (e) {
-    console.error(e);
-    res.status(400).json({ error: 'Unable to start table session' });
-  }
-});
+app.post('/api/session',async(req,res)=>{try{const body=z.object({restaurantSlug:z.string().min(1).max(100).optional(),tableToken:z.string().min(20).max(100).optional(),tableCode:z.string().min(4).max(20).optional()}).refine(v=>v.tableCode||(v.restaurantSlug&&v.tableToken),{message:'Invalid table reference'}).parse(req.body);let restaurant=null,table=null;if(body.tableCode){const{data}=await supabase.from('restaurant_tables').select('id,active,restaurant_id,restaurants!inner(id,slug)').eq('short_code',body.tableCode).eq('active',true).maybeSingle();table=data;restaurant=data?.restaurants||null}else{const{data}=await supabase.from('restaurants').select('id').eq('slug',body.restaurantSlug).maybeSingle();restaurant=data||null;if(restaurant){const{data:t}=await supabase.from('restaurant_tables').select('id,active').eq('restaurant_id',restaurant.id).eq('public_token',body.tableToken).eq('active',true).maybeSingle();table=t}}if(!restaurant)return res.status(404).json({error:'Invalid restaurant'});if(!table)return res.status(404).json({error:'Invalid table QR'});const token=crypto.randomBytes(32).toString('hex'),expires=new Date(Date.now()+12*60*60*1000).toISOString();const{error}=await supabase.from('customer_sessions').insert({restaurant_id:restaurant.id,table_id:table.id,session_token:token,expires_at:expires});if(error)throw error;setSessionCookie(res,token);res.json({ok:true})}catch(e){console.error(e);res.status(400).json({error:'Unable to start table session'})}});
 
 async function adminAuth(req, res, next) {
   try {
@@ -344,8 +318,8 @@ app.post('/api/admin/tables', adminAuth, async (req,res)=>{
   if(!['owner','manager'].includes(req.admin.role))return res.status(403).json({error:'Only owners and managers can manage tables'});
   try{
     const body=z.object({label:z.string().min(1).max(50)}).parse(req.body);
-    const token='mudcups-table-'+Date.now().toString(36)+'-'+crypto.randomBytes(8).toString('hex');
-    const {data,error}=await supabase.from('restaurant_tables').insert({restaurant_id:req.admin.restaurant_id,label:body.label.trim(),public_token:token,active:true}).select('id,label,active,public_token').single();
+    const token='mudcups-table-'+Date.now().toString(36)+'-'+crypto.randomBytes(8).toString('hex'); const shortCode=crypto.randomBytes(5).toString('base64url').slice(0,8);
+    const {data,error}=await supabase.from('restaurant_tables').insert({restaurant_id:req.admin.restaurant_id,label:body.label.trim(),public_token:token,short_code:shortCode,active:true}).select('id,label,active,public_token,short_code').single();
     if(error)throw error;res.status(201).json({table:data});
   }catch(e){console.error(e);res.status(400).json({error:'Unable to create table'})}
 });
@@ -360,7 +334,7 @@ app.patch('/api/admin/tables/:id', adminAuth, async (req,res)=>{
 app.get('/api/admin/tables', adminAuth, async (req, res) => {
   try {
     const [{ data: tables, error: tableError }, { data: sessions, error: sessionError }, { data: orders, error: orderError }, { data: requests, error: requestError }] = await Promise.all([
-      supabase.from('restaurant_tables').select('id,label,active,public_token').eq('restaurant_id', req.admin.restaurant_id).order('label'),
+      supabase.from('restaurant_tables').select('id,label,active,public_token,short_code').eq('restaurant_id', req.admin.restaurant_id).order('label'),
       supabase.from('customer_sessions').select('id,table_id,created_at,expires_at').eq('restaurant_id', req.admin.restaurant_id).gt('expires_at', new Date().toISOString()).order('created_at',{ascending:false}),
       supabase.from('orders').select('id,table_id,status,total,created_at,payment_status,payment_method,paid_at').eq('restaurant_id', req.admin.restaurant_id).not('status','in','(served,cancelled)').order('created_at',{ascending:false}),
       supabase.from('service_requests').select('table_id,type,status').eq('restaurant_id', req.admin.restaurant_id).in('status',['pending','acknowledged'])
@@ -379,7 +353,7 @@ app.get('/api/admin/tables', adminAuth, async (req, res) => {
       const session = latestSession.get(t.id);
       const order = latestOrder.get(t.id)||null;
       return {
-        id:t.id,label:t.label,active:t.active,public_token:t.public_token,
+        id:t.id,label:t.label,active:t.active,public_token:t.public_token,short_code:t.short_code,
         occupied:!!session,
         session_id:session?.id||null,
         session_started_at:session?.created_at||null,
