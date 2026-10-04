@@ -417,3 +417,9 @@ header{
 .menuOrderButtons button{width:28px;height:22px;padding:0!important;line-height:1;border-radius:6px!important}
 .menuOrderButtons button:disabled{opacity:.3;cursor:not-allowed}
 @media(max-width:600px){.adminMenuToolbar{grid-template-columns:1fr}.menuOrderButtons{flex-direction:row!important}.menuOrderButtons button{width:34px}}
+
+.tableCreateForm{display:flex;gap:8px;margin:0 0 14px;padding:12px;background:#fbf7f2;border:1px solid #e7dbcf;border-radius:11px}
+.tableCreateForm input{flex:1;min-width:0;height:40px;border:1px solid #d9cec2;border-radius:9px;padding:0 11px;background:#fff;font:inherit;font-size:11px}.tableCreateForm .placeOrder{width:auto!important;height:40px!important;padding:0 16px!important;background:#e97825!important;border-radius:9px!important}
+.tableAdminCard.inactive{opacity:.68}.tableAdminCard.inactive .tableAdminTop strong{color:#8a7e74}
+.tableAdminActions{display:flex;gap:6px;margin-top:8px}.tableAdminActions button{flex:1;border:1px solid #d9cec2;background:#fff;border-radius:8px;padding:7px 6px;font-size:9px;font-weight:700}.tableAdminActions button:last-child{color:#a74e12}
+@media(max-width:600px){.tableCreateForm{flex-direction:column}.tableCreateForm .placeOrder{width:100%!important}.tableAdminActions{flex-direction:column}}
