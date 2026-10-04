@@ -236,27 +236,67 @@ app.patch('/api/admin/orders/:id', adminAuth, async (req, res) => {
 
 app.get('/api/admin/tables', adminAuth, async (req, res) => {
   try {
-    const [{ data: tables, error: tableError }, { data: orders, error: orderError }, { data: requests, error: requestError }] = await Promise.all([
+    const [{ data: tables, error: tableError }, { data: sessions, error: sessionError }, { data: orders, error: orderError }, { data: requests, error: requestError }] = await Promise.all([
       supabase.from('restaurant_tables').select('id,label,active').eq('restaurant_id', req.admin.restaurant_id).order('label'),
+      supabase.from('customer_sessions').select('id,table_id,created_at,expires_at').eq('restaurant_id', req.admin.restaurant_id).gt('expires_at', new Date().toISOString()).order('created_at',{ascending:false}),
       supabase.from('orders').select('id,table_id,status,total,created_at').eq('restaurant_id', req.admin.restaurant_id).not('status','in','(served,cancelled)').order('created_at',{ascending:false}),
       supabase.from('service_requests').select('table_id,type,status').eq('restaurant_id', req.admin.restaurant_id).in('status',['pending','acknowledged'])
     ]);
     if (tableError) throw tableError;
+    if (sessionError) throw sessionError;
     if (orderError) throw orderError;
     if (requestError) throw requestError;
-    const latest = new Map();
-    for (const o of (orders || [])) if (!latest.has(o.table_id)) latest.set(o.table_id,o);
+    const latestSession = new Map();
+    for (const s of (sessions || [])) if (!latestSession.has(s.table_id)) latestSession.set(s.table_id,s);
+    const latestOrder = new Map();
+    for (const o of (orders || [])) if (!latestOrder.has(o.table_id)) latestOrder.set(o.table_id,o);
     const requestCounts = new Map();
     for (const r of (requests || [])) requestCounts.set(r.table_id,(requestCounts.get(r.table_id)||0)+1);
-    res.json({ tables:(tables||[]).map(t=>({
-      id:t.id,label:t.label,active:t.active,
-      occupied:latest.has(t.id),
-      order:latest.get(t.id)||null,
-      requests:requestCounts.get(t.id)||0
-    }))});
+    res.json({ tables:(tables||[]).map(t=>{
+      const session = latestSession.get(t.id);
+      const order = latestOrder.get(t.id)||null;
+      return {
+        id:t.id,label:t.label,active:t.active,
+        occupied:!!session,
+        session_id:session?.id||null,
+        session_started_at:session?.created_at||null,
+        order,
+        requests:requestCounts.get(t.id)||0
+      };
+    })});
   } catch (e) {
     console.error(e);
     res.status(500).json({ error:'Unable to load table status' });
+  }
+});
+
+app.post('/api/admin/tables/:id/close-session', adminAuth, async (req,res) => {
+  try {
+    const now = new Date().toISOString();
+    const { data: session, error: sessionError } = await supabase
+      .from('customer_sessions')
+      .select('id')
+      .eq('id',req.params.id)
+      .eq('restaurant_id',req.admin.restaurant_id)
+      .maybeSingle();
+    if (sessionError) throw sessionError;
+    if (!session) return res.status(404).json({error:'Table session not found'});
+    const { error: closeError } = await supabase
+      .from('customer_sessions')
+      .update({expires_at:now})
+      .eq('id',session.id)
+      .eq('restaurant_id',req.admin.restaurant_id);
+    if (closeError) throw closeError;
+    await supabase
+      .from('service_requests')
+      .update({status:'completed'})
+      .eq('session_id',session.id)
+      .eq('restaurant_id',req.admin.restaurant_id)
+      .in('status',['pending','acknowledged']);
+    res.json({ok:true});
+  } catch(e) {
+    console.error(e);
+    res.status(400).json({error:'Could not close table session'});
   }
 });
 
