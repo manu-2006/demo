@@ -86,3 +86,7 @@
 .tableAdminEmpty{margin-top:12px;color:#8a8177;font-size:11px}
 .tableAdminRequest{margin-top:10px;border-radius:9px;background:#fff0df;color:#a64b16;padding:7px 8px;font-size:10px;font-weight:900}
 @media(max-width:480px){.tableAdminGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.tableAdminCard{padding:11px}.tableAdminTop b{font-size:15px}}
+
+.closeTableButton{width:100%;margin-top:11px;min-height:34px;border:1px solid #e3c8b9;border-radius:10px;background:#fff;color:#9d3b24;font-size:10px;font-weight:900}
+.closeTableButton:active{transform:scale(.98)}
+.tableAdminCard.occupied .closeTableButton{background:#fff7ef}
