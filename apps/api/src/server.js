@@ -234,6 +234,31 @@ app.patch('/api/admin/orders/:id', adminAuth, async (req, res) => {
   }
 });
 
+app.get('/api/orders', async (req, res) => {
+  try {
+    const session = await customerSession(req);
+    if (!session) return res.status(401).json({ error: 'Table session expired' });
+    const { data, error } = await supabase
+      .from('orders')
+      .select('id,status,total,created_at,order_items(id,name_snapshot,quantity,price_snapshot,variant_snapshot)')
+      .eq('session_id', session.session_id)
+      .eq('restaurant_id', session.restaurant_id)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (error) throw error;
+    const orders = (data || []).map(o => ({
+      id:o.id,status:o.status,total:o.total,created_at:o.created_at,
+      items:(o.order_items||[]).map(i=>({
+        name:i.name_snapshot,quantity:i.quantity,price:i.price_snapshot,variant:i.variant_snapshot
+      }))
+    }));
+    res.json({ table_label:session.table_label, orders });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error:'Unable to load order history' });
+  }
+});
+
 app.post('/api/orders', async (req, res) => {
   try {
     const session = await customerSession(req);
