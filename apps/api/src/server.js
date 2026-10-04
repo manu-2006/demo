@@ -385,6 +385,48 @@ app.get('/api/orders', async (req, res) => {
   }
 });
 
+app.get('/api/bill', async (req,res) => {
+  try {
+    const session = await customerSession(req);
+    if (!session) return res.status(401).json({error:'Table session expired'});
+    const { data, error } = await supabase
+      .from('orders')
+      .select('id,status,total,created_at,payment_status,payment_method,paid_at,order_items(id,name_snapshot,quantity,price_snapshot,variant_snapshot)')
+      .eq('session_id',session.session_id)
+      .eq('restaurant_id',session.restaurant_id)
+      .neq('status','cancelled')
+      .order('created_at',{ascending:true});
+    if(error) throw error;
+    const orders=(data||[]).map(o=>({
+      id:o.id,status:o.status,total:Number(o.total),created_at:o.created_at,
+      payment_status:o.payment_status||'unpaid',payment_method:o.payment_method||null,paid_at:o.paid_at||null,
+      items:(o.order_items||[]).map(i=>({name:i.name_snapshot,quantity:i.quantity,price:Number(i.price_snapshot),variant:i.variant_snapshot}))
+    }));
+    const grandTotal=orders.reduce((sum,o)=>sum+o.total,0);
+    const unpaidTotal=orders.filter(o=>o.payment_status!=='paid').reduce((sum,o)=>sum+o.total,0);
+    res.json({
+      restaurant_name:session.restaurant_name,table_label:session.table_label,orders,
+      grand_total:grandTotal,unpaid_total:unpaidTotal,
+      payment_mode:process.env.DEMO_PAYMENT_MODE === 'false' ? 'live' : 'demo',
+      payment_vpa:process.env.RESTAURANT_UPI_VPA || 'demo@upi'
+    });
+  } catch(e) { console.error(e); res.status(500).json({error:'Unable to load bill'}); }
+});
+
+app.post('/api/bill/demo-pay', async (req,res) => {
+  try {
+    if (process.env.DEMO_PAYMENT_MODE === 'false') return res.status(403).json({error:'Demo payments are disabled'});
+    const session=await customerSession(req);
+    if(!session) return res.status(401).json({error:'Table session expired'});
+    const {data,error}=await supabase.from('orders')
+      .update({payment_status:'paid',payment_method:'upi',paid_at:new Date().toISOString()})
+      .eq('session_id',session.session_id).eq('restaurant_id',session.restaurant_id)
+      .neq('status','cancelled').eq('payment_status','unpaid').select('id');
+    if(error) throw error;
+    res.json({ok:true,paid_orders:(data||[]).length});
+  } catch(e) { console.error(e); res.status(400).json({error:'Demo payment could not be completed'}); }
+});
+
 app.post('/api/orders', async (req, res) => {
   try {
     const session = await customerSession(req);
