@@ -59,7 +59,7 @@ export default function Platform(){
   </form></div>;
   const active=restaurants.filter(r=>r.status==='active').length,trial=restaurants.filter(r=>r.status==='trial').length,suspended=restaurants.filter(r=>r.status==='suspended').length;
   return <div className="platformPage">
-    <header className="platformHeader"><div className="platformHeaderBrand"><b>ZELVON</b><span>Platform Control Center</span></div><div className="platformHeaderRight"><span className="platformLiveDot">● Live</span><button onClick={logout}>Logout</button></div></header>
+    <header className="platformHeader"><div className="platformHeaderBrand"><img src="/zelvon-mark.svg" alt="Zelvon"/><b>ZELVON</b><span>Platform Control Center</span></div><div className="platformHeaderRight"><span className="platformLiveDot">● Live</span><button onClick={logout}>Logout</button></div></header>
     <main className="platformMain">
       <div className="platformHero"><div><span>SAAS OPERATIONS</span><h1>Restaurants</h1><p>One platform. Isolated data. Centralized control.</p></div><div className="platformHeroBadge"><b>{active}</b><span>active tenants</span></div></div>
       {error&&<div className="platformError">{error}</div>}{notice&&<div className="platformSuccess">{notice}</div>}
