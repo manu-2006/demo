@@ -284,3 +284,5 @@ header{
     padding-right:9px;
   }
 }
+
+.paymentSecurityNote{display:block;margin-top:10px;text-align:center;color:#81766d;font-size:10px;line-height:1.45}
