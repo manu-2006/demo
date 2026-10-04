@@ -24,7 +24,7 @@ app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false }));
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!JWT_SECRET) console.warn('JWT_SECRET is not configured');
 const orderSchema = z.object({
   items: z.array(z.object({
