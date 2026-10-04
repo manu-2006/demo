@@ -16,8 +16,17 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 
 app.set('trust proxy', 1);
 app.use(helmet());
+const allowedOrigins = new Set([
+  'https://qr-restaurant-os.onrender.com',
+  'http://localhost:5173',
+  process.env.WEB_ORIGIN
+].filter(Boolean));
+
 app.use(cors({
-  origin: process.env.WEB_ORIGIN || 'http://localhost:5173',
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+    return callback(new Error('CORS origin not allowed'));
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '1mb', verify: (req, _res, buf) => { req.rawBody = buf; } }));
