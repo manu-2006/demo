@@ -36,8 +36,8 @@ const orderSchema = z.object({
 
 function setSessionCookie(res, token) {
   res.cookie('customer_session', token, {
-    httpOnly: true, secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax', path: '/', maxAge: 12 * 60 * 60 * 1000
+    httpOnly: true, secure: true,
+    sameSite: 'none', path: '/', maxAge: 12 * 60 * 60 * 1000
   });
 }
 
